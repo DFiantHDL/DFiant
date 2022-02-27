@@ -3,7 +3,7 @@ import DFiant.compiler.ir
 import DFiant.internals.*
 import DFVal.Func.Op as FuncOp
 import DFiant.compiler.ir.DFVal.ModifierAny
-import DFiant.core.CompanionsDFBits.BitIndex
+import DFiant.core.DFBits.BitIndex
 
 import scala.annotation.targetName
 import scala.annotation.unchecked.uncheckedVariance
