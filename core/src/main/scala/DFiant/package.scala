@@ -323,7 +323,6 @@ package object DFiant {
     case object DontCare extends Behaviour
   }
 
-  type ? = Bubble
   /**
     * The bubble construct. Bubbles are used to declare either stalls or "don't cares",
     * depending on the context in which they are applied

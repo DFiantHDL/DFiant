@@ -14,14 +14,14 @@ inThisBuild(List(
 
 name := projectName
 ThisBuild / organization := "io.github.dfianthdl"
-ThisBuild / scalaVersion := "2.13.5"
+ThisBuild / scalaVersion := "2.13.10"
 //ThisBuild / resolvers += "pr" at "https://scala-ci.typesafe.com/artifactory/scala-pr-validation-snapshots/"
 ThisBuild / resolvers += "scala-integration" at
   "https://scala-ci.typesafe.com/artifactory/scala-integration/"
 
 //resolvers in ThisBuild += "Oscar Snapshots" at "http://artifactory.info.ucl.ac.be/artifactory/libs-snapshot/"
 
-//version in ThisBuild := "0.0.20-SNAPSHOT"
+version in ThisBuild := "0.1.3-SNAPSHOT"
 //enablePlugins(ScalaJSPlugin)
 
 // PROJECTS

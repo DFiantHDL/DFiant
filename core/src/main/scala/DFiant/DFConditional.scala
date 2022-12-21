@@ -230,7 +230,7 @@ object DFConditional {
         ) : CaseBlock[Type, MVType, true] = new CaseBlock[Type, MVType, true](
           matchHeader, Some(owner), Some(patternBld(mvType, pattern))
         )(retBld(dfType, block))
-        def casedf[B](others : ?)(block : => Exact[B])(
+        def casedf[B](others : Bubble)(block : => Exact[B])(
           implicit ctx : DFBlock.Context, retBld : DFAny.`Op:=,<>`.Builder[Type, B]
         ) : CaseBlock[Type, MVType, false] = new CaseBlock[Type, MVType, false](
           matchHeader, Some(owner), None
@@ -275,7 +275,7 @@ object DFConditional {
         ) : CaseBlock[MVType, true] = new CaseBlock[MVType, true](
           matchHeader, thisBlockOption, Some(patternBld(mvType, pattern))
         )(block)
-        def casedf(others : ?)(block : => Unit)(
+        def casedf(others : Bubble)(block : => Unit)(
           implicit ctx : DFBlock.Context
         ) : CaseBlock[MVType, false] = new CaseBlock[MVType, false](
           matchHeader, thisBlockOption, None
