@@ -41,10 +41,10 @@ object Inlined:
     inline constValueOpt[T] match
       case Some(_) => constValue[T]
       case None    => inlined.asInstanceOf[T]
-  inline given fromValue[T <: Singleton]: Conversion[T, Inlined[T]] =
+  given fromValue[T <: Singleton]: Conversion[T, Inlined[T]] =
     value => value
   @targetName("fromValueWide")
-  inline given fromValue[Wide]: Conversion[Wide, Inlined[Wide]] = value => value
+  given fromValue[Wide]: Conversion[Wide, Inlined[Wide]] = value => value
 
   inline def forced[T](value: Any): Inlined[T] = value.asInstanceOf[T]
   inline def apply[T <: Singleton](value: T): Inlined[T] = value
