@@ -1,8 +1,5 @@
 package dfhdl.core
 import dfhdl.compiler.ir
-import dfhdl.internals.*
-
-import scala.annotation.targetName
 
 sealed abstract class DFError(
     val dfMsg: String
