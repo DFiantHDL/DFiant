@@ -32,26 +32,10 @@ lazy val root = (project in file("."))
     publish / skip := true
   )
   .aggregate(
-    internals,
-    compiler_ir,
-    core,
-	compiler_stages,
-    lib
-  )
-
-lazy val internals = project
-  .settings(
-    name := s"$projectName-internals",
-    settings,
-    libraryDependencies ++= commonDependencies
+    core
   )
 
 
-lazy val compiler_ir = (project in file("compiler/ir"))
-  .settings(
-    name := s"$projectName-compiler-ir",
-    settings
-  ).dependsOn(internals)
 
 lazy val core = project
   .settings(
@@ -59,33 +43,7 @@ lazy val core = project
     settings,
     libraryDependencies ++= commonDependencies :+ dependencies.scalafmt
   )
-  .dependsOn(
-    internals,
-    compiler_ir
-  )
 
-lazy val compiler_stages = (project in file("compiler/stages"))
-  .settings(
-    name := s"$projectName-compiler-stages",
-    settings,
-    libraryDependencies ++= commonDependencies
-  )
-  .dependsOn(
-    internals,
-    compiler_ir,
-    core
-  )
-
-lazy val lib = project
-  .settings(
-    name := projectName,
-    settings,
-    libraryDependencies ++= commonDependencies
-  )
-  .dependsOn(
-    core % "test->test;compile->compile",
-    compiler_stages
-  )
 
 // DEPENDENCIES
 
