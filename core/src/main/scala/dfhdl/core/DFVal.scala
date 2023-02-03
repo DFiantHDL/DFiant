@@ -28,14 +28,10 @@ class DFVal[+T <: DFTypeAny, +M <: ModifierAny](val irValue: ir.DFVal | DFError)
 
   transparent inline def ==[R](
       inline that: R
-  )(using DFC): DFBool <> VAL = ${
-    DFVal.equalityMacro[T, R, FuncOp.===.type]('this, 'that)
-  }
+  )(using DFC): DFBool <> VAL = ???
   transparent inline def !=[R](
       inline that: R
-  )(using DFC): DFBool <> VAL = ${
-    DFVal.equalityMacro[T, R, FuncOp.=!=.type]('this, 'that)
-  }
+  )(using DFC): DFBool <> VAL = ???
 end DFVal
 
 type DFValAny = DFVal[DFTypeAny, ModifierAny]
@@ -122,32 +118,6 @@ object DFVal:
       }
     end refineMacro
   end Refiner
-
-  def equalityMacro[T <: DFTypeAny, R, Op <: FuncOp](
-      dfVal: Expr[DFValOf[T]],
-      arg: Expr[R]
-  )(using Quotes, Type[T], Type[R], Type[Op]): Expr[DFValOf[DFBool]] =
-    import quotes.reflect.*
-    if (TypeRepr.of[T].typeSymbol equals defn.NothingClass) return '{
-      compiletime.error("This is fake")
-    }
-    val exact = arg.asTerm.exactTerm
-    val exactExpr = exact.asExpr
-    val exactType = exact.tpe.asTypeOf[Any]
-    '{
-      val c = compiletime.summonInline[
-        DFVal.Compare[T, exactType.Underlying, Op, false]
-      ]
-      val dfc = compiletime.summonInline[DFC]
-      trydf {
-        c($dfVal, $exactExpr)(using
-          dfc,
-          compiletime.summonInline[ValueOf[Op]],
-          new ValueOf[false](false)
-        )
-      }(using dfc)
-    }
-  end equalityMacro
 
   // Enabling equality with Int, Boolean, and Tuples.
   // just to give a better error message via the compiler plugin.
@@ -505,94 +475,4 @@ object DFVal:
     export DFOpaque.Val.TC.given
   end TC
 
-  trait Compare[T <: DFTypeAny, V, Op <: FuncOp, C <: Boolean] extends TCConv[T, V, DFValAny]:
-    type Out = DFValOf[T]
-    final protected def func(arg1: DFValAny, arg2: DFValAny)(using
-        DFC,
-        ValueOf[Op],
-        ValueOf[C]
-    ): DFValOf[DFBool] =
-      val list = if (valueOf[C]) List(arg2, arg1) else List(arg1, arg2)
-      DFVal.Func(DFBool, valueOf[Op], list)
-    def apply(dfVal: DFValOf[T], arg: V)(using
-        DFC,
-        ValueOf[Op],
-        ValueOf[C]
-    ): DFValOf[DFBool] =
-      val dfValArg = conv(dfVal.dfType, arg)
-      func(dfVal, dfValArg)
-  end Compare
-  trait CompareLP:
-    transparent inline given errorDMZ[
-        T <: DFTypeAny,
-        R,
-        Op <: FuncOp,
-        C <: Boolean
-    ](using
-        t: ShowType[T],
-        r: ShowType[R]
-    ): Compare[T, R, Op, C] =
-      Error.call[
-        (
-            "Cannot compare dataflow value of type `",
-            t.Out,
-            "` with value of type `",
-            r.Out,
-            "`."
-        )
-      ]
-    inline given sameValType[T <: DFTypeAny, R <: T <> VAL, Op <: FuncOp, C <: Boolean](using
-        DFC,
-        ValueOf[Op],
-        ValueOf[C]
-    ): Compare[T, R, Op, C] with
-      def conv(dfType: T, arg: R): DFValOf[T] =
-        given Printer = DefaultPrinter(using dfc.getSet)
-        require(
-          dfType == arg.dfType,
-          s"Cannot compare dataflow value type `${dfType.codeString}` with dataflow value type `${arg.dfType.codeString}`."
-        )
-        arg
-    inline given sameValAndTokenType[
-        T <: DFTypeAny,
-        R <: T <> TOKEN,
-        Op <: FuncOp,
-        C <: Boolean
-    ](using
-        DFC,
-        ValueOf[Op],
-        ValueOf[C]
-    ): Compare[T, R, Op, C] with
-      def conv(dfType: T, arg: R): DFValOf[T] =
-        given Printer = DefaultPrinter(using dfc.getSet)
-        require(
-          dfType == arg.dfType,
-          s"Cannot compare dataflow value type `${dfType.codeString}` with dataflow value type `${arg.dfType.codeString}`."
-        )
-        DFVal.Const(arg)
-    end sameValAndTokenType
-  end CompareLP
-
-  trait DFDomainOnly
-  given (using domain: DFC.Domain)(using
-      AssertGiven[
-        domain.type <:< DFC.Domain.DF,
-        "This construct is only available in a dataflow domain."
-      ]
-  ): DFDomainOnly with {}
-  trait RTDomainOnly
-  given (using domain: DFC.Domain)(using
-      AssertGiven[
-        domain.type <:< DFC.Domain.RT,
-        "This construct is only available in a register-transfer domain."
-      ]
-  ): RTDomainOnly with {}
-  trait PrevCheck[I]
-  given [I](using
-      AssertGiven[
-        I =:= Modifier.Initialized,
-        "This construct is only available for initialized values or must have an initialization argument.\nE.g.: `x.prev(step, init)`."
-      ],
-      DFDomainOnly
-  ): PrevCheck[I] with {}
 end DFVal
