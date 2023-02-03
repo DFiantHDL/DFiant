@@ -37,7 +37,6 @@ object DFType:
       case dfType: DFTypeAny         => dfType
       case tuple: NonEmptyTuple      => DFTuple(tuple)
       case tfe: DFOpaque.Frontend[_] => DFOpaque(tfe)
-      case fields: DFStruct.Fields   => DFStruct(fields)
       case _: Byte.type              => DFBits(8)
       case _: Boolean.type           => DFBool
       case _: Int.type               => DFSInt(32)
@@ -47,10 +46,9 @@ object DFType:
       case enumCompanion: AnyRef => DFEnum(enumCompanion)
   private[core] def unapply(t: Any): Option[DFTypeAny] =
     t match
-      case dfVal: DFValAny  => Some(dfVal.dfType)
-      case DFTuple(dfType)  => Some(dfType)
-      case DFStruct(dfType) => Some(dfType)
-      case _                => None
+      case dfVal: DFValAny => Some(dfVal.dfType)
+      case DFTuple(dfType) => Some(dfType)
+      case _               => None
 
   extension [T <: ir.DFType, A <: Args](dfType: DFType[T, A])
     def asIR: T = dfType.value match
