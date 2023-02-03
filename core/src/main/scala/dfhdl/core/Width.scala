@@ -4,12 +4,9 @@ import compiler.ir
 
 type DFBoolOrBit = DFType[ir.DFBoolOrBit]
 object DFBoolOrBit:
-  given DFBool = DFBool
   given DFBit = DFBit
 end DFBoolOrBit
 
-type DFBool = DFType[ir.DFBool.type]
-final lazy val DFBool = ir.DFBool.asFE[DFBool]
 type DFBit = DFType[ir.DFBit.type]
 final lazy val DFBit = ir.DFBit.asFE[DFBit]
 
