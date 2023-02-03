@@ -1,6 +1,5 @@
 package dfhdl.core
 import dfhdl.compiler.ir
-import dfhdl.compiler.printing.{DefaultPrinter, Printer}
 import dfhdl.internals.*
 import scala.quoted.*
 

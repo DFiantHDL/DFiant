@@ -1,5 +1,4 @@
 package dfhdl.core
-import dfhdl.compiler.printing.Printer
 import dfhdl.compiler.ir
 import dfhdl.internals.*
 import scala.annotation.targetName
@@ -54,8 +53,6 @@ object DFType:
     def asIR: T = dfType.value match
       case dfTypeIR: T @unchecked => dfTypeIR
       case err: DFError           => throw DFError.Derived(err)
-    def codeString(using printer: Printer)(using DFC): String =
-      printer.csDFType(asIR)
   extension (dfType: ir.DFType) def asFE[T <: DFTypeAny]: T = new DFType(dfType).asInstanceOf[T]
   transparent inline implicit def conv[T <: Supported](inline t: T)(implicit
       tc: TC[T]

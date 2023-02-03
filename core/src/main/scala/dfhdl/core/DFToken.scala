@@ -1,5 +1,4 @@
 package dfhdl.core
-import dfhdl.compiler.printing.Printer
 import dfhdl.compiler.ir
 import ir.DFVal.Func.Op as FuncOp
 import dfhdl.internals.*
@@ -71,8 +70,6 @@ object DFToken:
     def asIR: ir.DFTokenAny = token.value match
       case tokenIR: ir.DFTokenAny => tokenIR
       case err: DFError           => throw DFError.Derived(err)
-    def codeString(using printer: Printer)(using DFC): String =
-      printer.csDFToken(asIR)
   extension [T <: ir.DFType, Data](
       token: DFToken[DFType[ir.DFType.Aux[T, Data], Args]]
   ) def data: Data = token.asIR.data.asInstanceOf[Data]

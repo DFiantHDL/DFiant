@@ -8,7 +8,6 @@ import scala.annotation.{implicitNotFound, targetName}
 import scala.quoted.*
 import DFOpaque.Abstract as DFOpaqueA
 import dfhdl.compiler.ir.MemberGetSet
-import dfhdl.compiler.printing.{DefaultPrinter, Printer}
 import scala.annotation.tailrec
 
 import scala.reflect.ClassTag

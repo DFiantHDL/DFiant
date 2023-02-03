@@ -4,7 +4,6 @@ import scala.reflect.{ClassTag, classTag}
 import scala.annotation.tailrec
 import scala.collection.mutable
 import dfhdl.internals.*
-import dfhdl.compiler.printing.{Printer, DefaultPrinter}
 
 final case class DB(
     members: List[DFMember],
@@ -253,178 +252,16 @@ final case class DB(
         case _ => ???
       }
   end FlatNet
-  given printer: Printer = DefaultPrinter
-  @tailrec private def getConnToDcls(
-      analyzeNets: List[FlatNet],
-      pendingNets: List[FlatNet],
-      connToDcls: Map[DFVal.Dcl, DFNet],
-      errors: List[String]
-  ): Map[DFVal.Dcl, DFNet] =
-    analyzeNets match
-      case flatNet :: otherNets =>
-        var newErrors = errors
-        extension (dfVal: DFVal)
-          def relValString: String =
-            printer.csDFValRef(dfVal, flatNet.net.getOwnerDesign)
-        def newError(errMsg: String): Unit =
-          val errMsgComplete =
-            s"""|DFiant HDL connectivity error!
-                |Position:  ${flatNet.net.meta.position}
-                |Hierarchy: ${flatNet.net.getOwnerDesign.getFullName}
-                |LHS:       ${flatNet.lhsVal.relValString}
-                |RHS:       ${flatNet.rhsVal.relValString}
-                |Message:   ${errMsg}""".stripMargin
-          newErrors = errMsgComplete :: newErrors
-        import flatNet.{lhsVal, rhsVal, net}
-        val (lhsAccess, rhsAccess) = net.op match
-          // assignment is always from right to left
-          case Assignment | NBAssignment => (Write, Read)
-          // connections are analyzed according to the context of the net
-          case _ => (getValAccess(lhsVal, net)(connToDcls), getValAccess(rhsVal, net)(connToDcls))
-        val toValOption = (lhsAccess, rhsAccess) match
-          case (Write, Read | ReadWrite | Unknown) => Some(lhsVal)
-          case (Read | ReadWrite | Unknown, Write) => Some(rhsVal)
-          case (Read, Read) =>
-            newError("Unsupported read-to-read connection.")
-            None
-          case (Write, Write) =>
-            newError("Unsupported write-to-write connection.")
-            None
-          case (_, Read) => Some(lhsVal)
-          case (Read, _) => Some(rhsVal)
-          case (Error, _) =>
-            newError(s"Unknown access pattern with ${lhsVal.relValString}.")
-            None
-          case (_, Error) =>
-            newError(s"Unknown access pattern with ${rhsVal.relValString}.")
-            None
-          case _ => None
-        val toDclOption = toValOption.flatMap(v =>
-          val dclOpt = v.dealias
-          if (dclOpt.isEmpty)
-            newError(s"Unexpected write access to the immutable value ${v.relValString}.")
-          dclOpt
-        )
-        toDclOption match
-          // found target variable or port declaration for the given connection/assignment
-          case Some(toDcl) =>
-            connToDcls.get(toDcl) match
-              // already has assignments, but multiple assignments are allowed
-              case Some(prevNet) if prevNet.isAssignment && net.isAssignment =>
-              // previous net is either a connection or an assignment
-              case Some(prevNet) =>
-                newError(
-                  s"""Multiple connections write to the same variable/port ${toDcl.getFullName}.
-                     |The previous write occured at ${prevNet.meta.position}""".stripMargin
-                )
-              // no previous connection is OK
-              case None =>
-            getConnToDcls(otherNets, pendingNets, connToDcls + (toDcl -> net), newErrors)
-          // unable to determine net directionality, so move net to pending
-          case None =>
-            getConnToDcls(otherNets, flatNet :: pendingNets, connToDcls, newErrors)
-        end match
-      case Nil if errors.nonEmpty =>
-        throw new IllegalArgumentException(
-          errors.view.reverse.mkString("\n\n")
-        )
-      case Nil if pendingNets.nonEmpty =>
-        val reexamine = pendingNets.exists {
-          case n
-              if n.lhsVal.dealias
-                .exists(connToDcls.contains) | n.rhsVal.dealias.exists(connToDcls.contains) =>
-            true
-          case _ => false
-        }
-        if (reexamine) getConnToDcls(pendingNets, Nil, connToDcls, errors)
-        else
-          throw new IllegalArgumentException(
-            s"""DFiant HDL connectivity errors!
-               |Unable to determine directionality for the following nets:
-               |${pendingNets.map(_.net.meta.position).mkString("\n")}""".stripMargin
-          )
-      case Nil => connToDcls
-    end match
-  end getConnToDcls
-
-  def nameCheck(): Unit =
-    // We use a Set since meta programming is usually the cause and can result in
-    // multiple anonymous members with the same position. The top can be anonymous.
-    val anonErrorMemberPositions: Set[Position] = members.drop(1).view.collect {
-      case dcl: DFVal.Dcl if dcl.meta.isAnonymous     => dcl.meta.position
-      case dsn: DFDesignBlock if dsn.meta.isAnonymous => dsn.meta.position
-    }.toSet
-    if (anonErrorMemberPositions.nonEmpty)
-      throw new IllegalArgumentException(
-        s"""DFiant HDL name errors!
-           |Unable to determine names for the members declared at the following positions:
-           |${anonErrorMemberPositions.mkString("\n")}
-           |
-           |Explanation:
-           |This can happen when utilizing the meta programming power of Scala in a way that
-           |DFHDL cannot infer the actual name of the member.
-           |
-           |Resolution:
-           |To resolve this issue use `setName` when declaring the member.
-           |
-           |Example 1:
-           |```
-           |  // Scala Vector holding 4 DFHDL ports
-           |  val x_vec = Vector.fill(4)(UInt(8) <> IN setName "x_vec")
-           |```
-           |In this example all the ports will be named "x_vec", and DFHDL will enumerate
-           |them automatically to "x_vec_0", "x_vec_1", etc.
-           |
-           |Example 2:
-           |If you wish to give the ports an explicit unique name, you can just use the power
-           |of Scala, as in the following example:
-           |```
-           |  val x_vec = Vector.tabulate(4)(i => UInt(8) <> IN setName s"x_vec_{i + 10}")
-           |```
-           |This would yield the same ports, but named "x_vec_10", "x_vec_11", etc.
-           |""".stripMargin
-      )
-  end nameCheck
-
-  def check(): Unit =
-    nameCheck()
-    connectionTable // causes connectivity checks
-
-  // There can only be a single connection to a value (but multiple assignments are possible)
   //                               To       Via
-  lazy val connectionTable: Map[DFVal.Dcl, DFNet] =
-    val flatNets = members.flatMap {
-      case net: DFNet => FlatNet(net)
-      case _          => Nil
-    }
-    getConnToDcls(flatNets, Nil, Map(), Nil).filter(_._2.isConnection)
-
+  lazy val connectionTable: Map[DFVal.Dcl, DFNet] = ???
   //                                    From       Via
-  lazy val connectionTableInverted: Map[DFVal, List[DFNet]] =
-    members
-      .collect { case n @ DFNet.Connection(_: DFVal, fromVal: DFVal, _) => (fromVal, n) }
-      .groupMap(_._1)(_._2)
-
+  lazy val connectionTableInverted: Map[DFVal, List[DFNet]] = ???
   //                              To       From
-  lazy val assignmentsTable: Map[DFVal, Set[DFVal]] =
-    members.foldLeft(Map.empty[DFVal, Set[DFVal]]) {
-      case (at, DFNet.Assignment(toVal, fromVal)) =>
-        at + (toVal -> (at.getOrElse(toVal, Set()) + fromVal))
-      case (at, _) => at
-    }
-
+  lazy val assignmentsTable: Map[DFVal, Set[DFVal]] = ???
   //                                     From       To
-  lazy val assignmentsTableInverted: Map[DFVal, Set[DFVal]] =
-    members.foldLeft(Map.empty[DFVal, Set[DFVal]]) {
-      case (at, DFNet.Assignment(toVal, fromVal)) =>
-        at + (fromVal -> (at.getOrElse(fromVal, Set()) + toVal))
-      case (at, _) => at
-    }
+  lazy val assignmentsTableInverted: Map[DFVal, Set[DFVal]] = ???
 
 end DB
-
-//object DB:
-//end DB
 
 enum MemberView derives CanEqual:
   case Folded, Flattened
