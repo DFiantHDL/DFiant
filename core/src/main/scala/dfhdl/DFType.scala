@@ -1,6 +1,6 @@
 package dfhdl
 
-case object DFBit
+case object DFBit derives CanEqual
 
 final class DFError extends Exception("") derives CanEqual
 final class DFType[+T](val value: T | DFError) extends AnyVal
