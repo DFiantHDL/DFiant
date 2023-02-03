@@ -41,4 +41,4 @@ end DFBoolOrBit
 type DFBit = DFType[ir.DFBit.type]
 final lazy val DFBit = ir.DFBit.asFE[DFBit]
 
-extension [T](t: T)(using tc: DFType.TC[T]) def width: Unit = tc(t).asIR
+extension [T](t: T) def width: Unit = DFBit.asIR
