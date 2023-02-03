@@ -20,12 +20,7 @@ object DFType:
 end DFType
 
 export DFType.asFE
-
 object Timer
-
-type DFBoolOrBit = DFType[ir.DFBoolOrBit]
-object DFBoolOrBit:
-end DFBoolOrBit
 
 type DFBit = DFType[ir.DFBit.type]
 final lazy val DFBit = ir.DFBit.asFE[DFBit]
