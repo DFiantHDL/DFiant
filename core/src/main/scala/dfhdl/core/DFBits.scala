@@ -5,7 +5,6 @@ import dfhdl.internals.*
 
 import scala.annotation.{implicitNotFound, targetName}
 import scala.quoted.*
-import scala.util.control.NonLocalReturns.*
 type DFBits[W <: Int] = DFType[ir.DFBits, Args1[W]]
 import DFDecimal.Constraints.`LW == RW`
 
@@ -20,10 +19,6 @@ object DFBits:
       Arg.Width.Check[W]
   ): DFBits[W] =
     DFBits[W](Inlined.forced[W](valueOf[W]))
-
-  given [W <: Int](using ValueOf[W])(using
-      Arg.Width.Check[W]
-  ): DFBits[W] = DFBits[W](Inlined.forced[W](valueOf[W]))
 
   type Token[W <: Int] = DFToken[DFBits[W]]
 end DFBits
