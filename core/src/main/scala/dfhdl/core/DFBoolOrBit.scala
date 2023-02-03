@@ -108,40 +108,6 @@ object DFBoolOrBit:
           Token(dfType, tokenArg.data)
     end Compare
 
-    object Ops:
-      extension (lhs: DFBit <> TOKEN)
-        def bool: DFBool <> TOKEN = Token(DFBool, lhs.data)
-        @targetName("notOfDFBit")
-        def unary_! : DFBit <> TOKEN = Token(DFBit, lhs.data.map(!_))
-      extension (lhs: DFBool <> TOKEN)
-        def bit: DFBit <> TOKEN = Token(DFBit, lhs.data)
-        @targetName("notOfDFBool")
-        def unary_! : DFBool <> TOKEN = Token(DFBool, lhs.data.map(!_))
-      extension [T <: DFBoolOrBit](lhs: T <> TOKEN)
-        def ||[R](rhs: Exact[R])(using ic: Candidate[R]): T <> TOKEN =
-          logicOp(lhs, ic(rhs), FuncOp.|)
-        def &&[R](rhs: Exact[R])(using ic: Candidate[R]): T <> TOKEN =
-          logicOp(lhs, ic(rhs), FuncOp.&)
-        def ^[R](rhs: Exact[R])(using ic: Candidate[R]): T <> TOKEN =
-          logicOp(lhs, ic(rhs), FuncOp.^)
-      extension [L](lhs: L)
-        def ||[RT <: DFBoolOrBit](
-            rhs: DFToken[RT]
-        )(using es: Exact.Summon[L, lhs.type])(using
-            ic: Candidate[es.Out]
-        ): RT <> TOKEN = logicOp(rhs, ic(es(lhs)), FuncOp.|)
-        def &&[RT <: DFBoolOrBit](
-            rhs: DFToken[RT]
-        )(using es: Exact.Summon[L, lhs.type])(using
-            ic: Candidate[es.Out]
-        ): RT <> TOKEN = logicOp(rhs, ic(es(lhs)), FuncOp.&)
-        def ^[RT <: DFBoolOrBit](
-            rhs: DFToken[RT]
-        )(using es: Exact.Summon[L, lhs.type])(using
-            ic: Candidate[es.Out]
-        ): RT <> TOKEN = logicOp(rhs, ic(es(lhs)), FuncOp.^)
-      end extension
-    end Ops
   end Token
 
   object Val:

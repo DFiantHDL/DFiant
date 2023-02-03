@@ -374,9 +374,7 @@ object DFVal:
           // anonymous constant are replace by a different constant
           // after its token value was converted according to the alias
           case const: ir.DFVal.Const if const.isAnonymous =>
-            import DFBits.Token.Ops.apply
-            val updatedToken = const.token.asTokenOf[DFBits[W]](relBitHigh, relBitLow)
-            Const(updatedToken).asIR.asVal[DFBits[H - L + 1], M]
+            ???
           // named constants or other non-constant values are referenced
           // in a new alias construct
           case _ =>
@@ -611,86 +609,6 @@ object DFVal:
       ],
       DFDomainOnly
   ): PrevCheck[I] with {}
-  object Ops:
-    // TODO: change to step Inlined[S] for all operations after https://github.com/lampepfl/dotty/issues/14451
-    // is resolved.
-    extension [T <: DFTypeAny, A, C, I, S <: Int, V](dfVal: DFVal[T, Modifier[A, C, I]])
-      def prev(step: Inlined[S], initValue: Exact[V])(using
-          dfc: DFC,
-          tokenTC: DFToken.TC[T, V],
-          check: Arg.Positive.Check[S]
-      ): DFValOf[T] = trydf {
-        check(step)
-        val initOpt = Some(tokenTC(dfVal.dfType, initValue))
-        DFVal.Alias.History(dfVal, step, DFVal.Alias.History.Op.Prev, initOpt)
-      }
-      def prev(step: Inlined[S])(using
-          dfc: DFC,
-          prevCheck: PrevCheck[I],
-          check: Arg.Positive.Check[S]
-      ): DFValOf[T] = trydf {
-        check(step)
-        DFVal.Alias.History(dfVal, step, DFVal.Alias.History.Op.Prev, None)
-      }
-      inline def prev(using PrevCheck[I], DFC): DFValOf[T] = dfVal.prev(1)
-      def pipe(
-          step: Inlined[S]
-      )(using dfOnly: DFDomainOnly, dfc: DFC, check: Arg.Positive.Check[S]): DFValOf[T] = trydf {
-        check(step)
-        DFVal.Alias.History(dfVal, step, DFVal.Alias.History.Op.Pipe, None)
-      }
-      inline def pipe(using DFC, DFDomainOnly): DFValOf[T] = dfVal.pipe(1)
-      def reg(step: Inlined[S])(using
-          dfc: DFC,
-          rtOnly: RTDomainOnly,
-          check: Arg.Positive.Check[S]
-      ): DFValOf[T] = trydf {
-        check(step)
-        DFVal.Alias.History(dfVal, step, DFVal.Alias.History.Op.Reg(DerivedCfg), None)
-      }
-      def reg(step: Inlined[S])(domainCfg: RTDomainCfg)(using
-          dfc: DFC,
-          rtOnly: RTDomainOnly,
-          check: Arg.Positive.Check[S]
-      ): DFValOf[T] = trydf {
-        check(step)
-        DFVal.Alias.History(dfVal, step, DFVal.Alias.History.Op.Reg(domainCfg), None)
-      }
-      def reg(step: Inlined[S], initValue: Exact[V])(using
-          dfc: DFC,
-          rtOnly: RTDomainOnly,
-          tokenTC: DFToken.TC[T, V],
-          check: Arg.Positive.Check[S]
-      ): DFValOf[T] = trydf {
-        check(step)
-        val initOpt = Some(tokenTC(dfVal.dfType, initValue))
-        DFVal.Alias.History(dfVal, step, DFVal.Alias.History.Op.Reg(DerivedCfg), initOpt)
-      }
-      def reg(step: Inlined[S], initValue: Exact[V])(domainCfg: RTDomainCfg)(using
-          dfc: DFC,
-          rtOnly: RTDomainOnly,
-          tokenTC: DFToken.TC[T, V],
-          check: Arg.Positive.Check[S]
-      ): DFValOf[T] = trydf {
-        check(step)
-        val initOpt = Some(tokenTC(dfVal.dfType, initValue))
-        DFVal.Alias.History(dfVal, step, DFVal.Alias.History.Op.Reg(domainCfg), initOpt)
-      }
-      inline def reg(using DFC, RTDomainOnly): DFValOf[T] = dfVal.reg(1)
-      inline def reg(domainCfg: RTDomainCfg)(using DFC, RTDomainOnly): DFValOf[T] =
-        dfVal.reg(1)(domainCfg)
-    end extension
-
-    extension [T <: DFTypeAny, A, C, I](dfVal: DFVal[T, Modifier[A, C, I]])
-      def bits(using w: Width[T])(using DFC): DFValOf[DFBits[w.Out]] = trydf {
-        import DFToken.Ops.{bits => bitsDFToken}
-        DFVal.Alias.AsIs(DFBits(dfVal.width), dfVal, _.bitsDFToken)
-      }
-      def genNewVar(using DFC): DFVarOf[T] = trydf {
-        DFVal.Dcl(dfVal.dfType, Modifier.VAR)
-      }
-    end extension
-  end Ops
 end DFVal
 
 extension [T <: DFTypeAny](dfVar: DFValOf[T])

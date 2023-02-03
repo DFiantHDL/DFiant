@@ -446,8 +446,6 @@ object DFDecimal:
         end if
       end unapplySeqMacro
     end StrInterp
-    object Ops:
-      export DFXInt.Token.Ops.*
   end Token
 
   object Val:
@@ -463,8 +461,6 @@ object DFDecimal:
     end TC
     object Compare:
       export DFXInt.Val.Compare.given
-    object Ops:
-      export DFXInt.Val.Ops.*
   end Val
 end DFDecimal
 
@@ -510,9 +506,7 @@ object DFXInt:
           type OutS = false
           type OutW = W
           type IsScalaInt = false
-          def apply(arg: R): Token[false, W] =
-            import DFBits.Token.Ops.uint
-            arg.uint
+          def apply(arg: R): Token[false, W] = ???
     end Candidate
 
     object TC:
@@ -522,23 +516,7 @@ object DFXInt:
       )(using
           check: TCCheck[LS, LW, ic.OutS, ic.OutW]
       ): TC[DFXInt[LS, LW], R] with
-        def conv(dfType: DFXInt[LS, LW], value: R): Out =
-          import DFUInt.Token.Ops.signed
-          val token = ic(value)
-          check(dfType.signed, dfType.width, token.dfType.signed, token.width)
-          // We either need to widen the token we got from a value int candidate
-          // or it remains the same. In either case, there is not need to touch
-          // the data itself, but just the dfType of the token.
-          val resizedToken: ir.DFTokenAny =
-            val tokenIR =
-              if (dfType.signed != token.dfType.signed)
-                token.asIR.asTokenOf[DFUInt[LW]].signed.asIR
-              else token.asIR
-            if (dfType.width > token.width)
-              ir.DFToken(dfType.asIR)(token.data)
-            else tokenIR
-          resizedToken.asTokenOf[DFXInt[LS, LW]]
-        end conv
+        def conv(dfType: DFXInt[LS, LW], value: R): Out = ???
       end given
     end TC
 
@@ -585,266 +563,6 @@ object DFXInt:
       end given
     end Compare
 
-    object Ops:
-      export DFUInt.Token.Ops.*
-      export DFSInt.Token.Ops.*
-      private def arithOp[
-          OS <: Boolean,
-          OW <: Int,
-          LS <: Boolean,
-          LW <: Int,
-          RS <: Boolean,
-          RW <: Int
-      ](
-          dfType: DFXInt[OS, OW],
-          op: FuncOp,
-          lhs: Token[LS, LW],
-          rhs: Token[RS, RW]
-      ): Token[OS, OW] =
-        val dataOut = (lhs.data, rhs.data) match
-          case (Some(l), Some(r)) =>
-            val dataNoTrunc = op match
-              case FuncOp.+ => l + r
-              case FuncOp.- => l - r
-              case FuncOp.* => l * r
-              case FuncOp./ => l / r
-              case FuncOp.% => l % r
-              case _        => ???
-            val widthNoTrunc = dataNoTrunc.bitsWidth(dfType.signed)
-            val dataTrunc =
-              if (widthNoTrunc > dfType.width)
-                dataNoTrunc.toBitVector(dfType.width).toBigInt(dfType.signed)
-              else dataNoTrunc
-            val dataFixSign =
-              if (dataTrunc < 0 && !dfType.signed)
-                dataTrunc.asUnsigned(dfType.width)
-              else dataTrunc
-            Some(dataFixSign)
-          case _ => None
-        Token(dfType.signed, dfType.width, dataOut)
-      end arithOp
-      extension [S <: Boolean, W <: Int](
-          lhs: Token[S, W]
-      )
-        @targetName("resizeDFXInt")
-        def resize[RW <: Int](
-            updatedWidth: Inlined[RW]
-        )(using check: Width.Check[S, RW]): Token[S, RW] =
-          val updatedTokenIR =
-            // no change in width
-            if (updatedWidth == lhs.width) lhs.asIR
-            else
-              val signed = lhs.dfType.signed
-              check(signed, updatedWidth)
-              // updated width is larger or the data is bubble
-              // TODO:Wrong run error workaround by changing to `updatedWidth.value` and `lhs.width.value`
-              if (updatedWidth.value > lhs.width.value || lhs.asIR.isBubble)
-                DFXInt.Token(signed, updatedWidth, lhs.data).asIR
-              else // updated width is smaller
-                import DFToken.Ops.bits
-                import DFBits.Token.Ops.{resize => resizeDFBits, *}
-                if (signed)
-                  val tokenBits = lhs.bits
-                  (tokenBits.msbit.bits ++
-                    tokenBits(updatedWidth.value - 2, 0)).sint.asIR
-                else // unsigned
-                  lhs.bits
-                    .resizeDFBits(updatedWidth)
-                    .uint
-                    .asIR
-              end if
-          updatedTokenIR.asTokenOf[DFXInt[S, RW]]
-        end resize
-        def <[R](rhs: Exact[R])(using
-            op: DFToken.Compare[DFXInt[S, W], R, FuncOp.<.type, false]
-        ): DFBool <> TOKEN = op(lhs, rhs)
-        def >[R](rhs: Exact[R])(using
-            op: DFToken.Compare[DFXInt[S, W], R, FuncOp.>.type, false]
-        ): DFBool <> TOKEN = op(lhs, rhs)
-        def <=[R](rhs: Exact[R])(using
-            op: DFToken.Compare[DFXInt[S, W], R, FuncOp.<=.type, false]
-        ): DFBool <> TOKEN = op(lhs, rhs)
-        def >=[R](rhs: Exact[R])(using
-            op: DFToken.Compare[DFXInt[S, W], R, FuncOp.>=.type, false]
-        ): DFBool <> TOKEN = op(lhs, rhs)
-        def +[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            check: ArithCheck[S, W, icR.OutS, icR.OutW, icR.IsScalaInt, false]
-        ): DFXInt[S, W] <> TOKEN =
-          val rhsToken = icR(rhs)
-          check(lhs.dfType, rhsToken.dfType)
-          arithOp(lhs.dfType, FuncOp.+, lhs, rhsToken)
-        def -[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            check: ArithCheck[S, W, icR.OutS, icR.OutW, icR.IsScalaInt, false]
-        ): DFXInt[S, W] <> TOKEN =
-          val rhsToken = icR(rhs)
-          check(lhs.dfType, rhsToken.dfType)
-          arithOp(lhs.dfType, FuncOp.-, lhs, rhsToken)
-        def *[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            check: ArithCheck[S, W, icR.OutS, icR.OutW, icR.IsScalaInt, false]
-        ): DFXInt[S, W] <> TOKEN =
-          val rhsToken = icR(rhs)
-          check(lhs.dfType, rhsToken.dfType)
-          arithOp(lhs.dfType, FuncOp.`*`, lhs, rhsToken)
-        def /[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            check: ArithCheck[S, W, icR.OutS, icR.OutW, icR.IsScalaInt, false]
-        ): DFXInt[S, W] <> TOKEN =
-          val rhsToken = icR(rhs)
-          check(lhs.dfType, rhsToken.dfType)
-          arithOp(lhs.dfType, FuncOp./, lhs, rhsToken)
-        def %[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            check: ArithCheck[S, W, icR.OutS, icR.OutW, icR.IsScalaInt, false]
-        ): DFXInt[S, W] <> TOKEN =
-          val rhsToken = icR(rhs)
-          check(lhs.dfType, rhsToken.dfType)
-          arithOp(lhs.dfType, FuncOp.%, lhs, rhsToken)
-        def +^[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            check: SignCheck[S, icR.OutS, icR.IsScalaInt, false]
-        ): DFXInt[S, Max[W, icR.OutW] + 1] <> TOKEN =
-          val rhsToken = icR(rhs)
-          check(lhs.dfType.signed, rhsToken.dfType.signed)
-          val width = Inlined.forced[Max[W, icR.OutW] + 1](
-            (lhs.dfType.width.value max rhsToken.dfType.width) + 1
-          )
-          val dfType = DFXInt(lhs.dfType.signed, width)
-          arithOp(dfType, FuncOp.+, lhs, rhsToken)
-        def -^[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            check: SignCheck[S, icR.OutS, icR.IsScalaInt, false]
-        ): DFXInt[S, Max[W, icR.OutW] + 1] <> TOKEN =
-          val rhsToken = icR(rhs)
-          check(lhs.dfType.signed, rhsToken.dfType.signed)
-          val width = Inlined.forced[Max[W, icR.OutW] + 1](
-            (lhs.dfType.width.value max rhsToken.dfType.width) + 1
-          )
-          val dfType = DFXInt(lhs.dfType.signed, width)
-          arithOp(dfType, FuncOp.-, lhs, rhsToken)
-        def *^[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            check: SignCheck[S, icR.OutS, icR.IsScalaInt, false]
-        ): DFXInt[S, W + icR.OutW] <> TOKEN =
-          val rhsToken = icR(rhs)
-          check(lhs.dfType.signed, rhsToken.dfType.signed)
-          val width = Inlined.forced[W + icR.OutW](
-            lhs.dfType.width.value + rhsToken.dfType.width
-          )
-          val dfType = DFXInt(lhs.dfType.signed, width)
-          arithOp(dfType, FuncOp.`*`, lhs, rhsToken)
-      end extension
-      extension [L](lhs: L)
-        def <[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> TOKEN
-        )(using es: Exact.Summon[L, lhs.type])(using
-            c: DFToken.Compare[DFXInt[RS, RW], es.Out, FuncOp.<.type, true]
-        ): DFBool <> TOKEN = c(rhs, es(lhs))
-        def >[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> TOKEN
-        )(using es: Exact.Summon[L, lhs.type])(using
-            c: DFToken.Compare[DFXInt[RS, RW], es.Out, FuncOp.>.type, true]
-        ): DFBool <> TOKEN = c(rhs, es(lhs))
-        def <=[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> TOKEN
-        )(using es: Exact.Summon[L, lhs.type])(using
-            c: DFToken.Compare[DFXInt[RS, RW], es.Out, FuncOp.<=.type, true]
-        ): DFBool <> TOKEN = c(rhs, es(lhs))
-        def >=[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> TOKEN
-        )(using es: Exact.Summon[L, lhs.type])(using
-            c: DFToken.Compare[DFXInt[RS, RW], es.Out, FuncOp.>=.type, true]
-        ): DFBool <> TOKEN = c(rhs, es(lhs))
-      end extension
-      extension [L](lhs: L)
-        def +[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> TOKEN
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            check: ArithCheck[RS, RW, icL.OutS, icL.OutW, icL.IsScalaInt, true]
-        ): DFXInt[icL.OutS, icL.OutW] <> TOKEN =
-          val lhsToken = icL(sL(lhs))
-          check(rhs.dfType, lhsToken.dfType)
-          arithOp(lhsToken.dfType, FuncOp.+, lhsToken, rhs)
-        def -[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> TOKEN
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            check: ArithCheck[RS, RW, icL.OutS, icL.OutW, icL.IsScalaInt, true]
-        ): DFXInt[icL.OutS, icL.OutW] <> TOKEN =
-          val lhsToken = icL(sL(lhs))
-          check(rhs.dfType, lhsToken.dfType)
-          arithOp(lhsToken.dfType, FuncOp.-, lhsToken, rhs)
-        def *[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> TOKEN
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            check: ArithCheck[RS, RW, icL.OutS, icL.OutW, icL.IsScalaInt, true]
-        ): DFXInt[icL.OutS, icL.OutW] <> TOKEN =
-          val lhsToken = icL(sL(lhs))
-          check(rhs.dfType, lhsToken.dfType)
-          arithOp(lhsToken.dfType, FuncOp.`*`, lhsToken, rhs)
-        def /[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> TOKEN
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            check: ArithCheck[RS, RW, icL.OutS, icL.OutW, icL.IsScalaInt, true]
-        ): DFXInt[icL.OutS, icL.OutW] <> TOKEN =
-          val lhsToken = icL(sL(lhs))
-          check(rhs.dfType, lhsToken.dfType)
-          arithOp(lhsToken.dfType, FuncOp./, lhsToken, rhs)
-        def %[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> TOKEN
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            check: ArithCheck[RS, RW, icL.OutS, icL.OutW, icL.IsScalaInt, true]
-        ): DFXInt[icL.OutS, icL.OutW] <> TOKEN =
-          val lhsToken = icL(sL(lhs))
-          check(rhs.dfType, lhsToken.dfType)
-          arithOp(lhsToken.dfType, FuncOp.%, lhsToken, rhs)
-        def +^[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> TOKEN
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            check: SignCheck[RS, icL.OutS, icL.IsScalaInt, true]
-        ): DFXInt[icL.OutS, Max[icL.OutW, RW] + 1] <> TOKEN =
-          val lhsToken = icL(sL(lhs))
-          check(rhs.dfType.signed, lhsToken.dfType.signed)
-          val width = Inlined.forced[Max[icL.OutW, RW] + 1](
-            (lhsToken.dfType.width.value max rhs.dfType.width.value) + 1
-          )
-          val dfType = DFXInt(lhsToken.dfType.signed, width)
-          arithOp(dfType, FuncOp.+, lhsToken, rhs)
-        def -^[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> TOKEN
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            check: SignCheck[RS, icL.OutS, icL.IsScalaInt, true]
-        ): DFXInt[icL.OutS, Max[icL.OutW, RW] + 1] <> TOKEN =
-          val lhsToken = icL(sL(lhs))
-          check(rhs.dfType.signed, lhsToken.dfType.signed)
-          val width = Inlined.forced[Max[icL.OutW, RW] + 1](
-            (lhsToken.dfType.width.value max rhs.dfType.width.value) + 1
-          )
-          val dfType = DFXInt(lhsToken.dfType.signed, width)
-          arithOp(dfType, FuncOp.-, lhsToken, rhs)
-        def *^[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> TOKEN
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            check: SignCheck[RS, icL.OutS, icL.IsScalaInt, true]
-        ): DFXInt[icL.OutS, icL.OutW + RW] <> TOKEN =
-          val lhsToken = icL(sL(lhs))
-          check(rhs.dfType.signed, lhsToken.dfType.signed)
-          val width = Inlined.forced[icL.OutW + RW](
-            lhsToken.dfType.width.value + rhs.dfType.width.value
-          )
-          val dfType = DFXInt(lhsToken.dfType.signed, width)
-          arithOp(dfType, FuncOp.`*`, lhsToken, rhs)
-      end extension
-    end Ops
   end Token
 
   object Val:
@@ -887,22 +605,7 @@ object DFXInt:
       )(using
           check: TCCheck[LS, LW, ic.OutS, ic.OutW]
       ): TC[DFXInt[LS, LW], R] with
-        def conv(dfType: DFXInt[LS, LW], value: R): Out =
-          import Ops.resize
-          import DFUInt.Val.Ops.signed
-          given dfcAnon: DFC = dfc.anonymize
-          val rhs = ic(value)
-          check(dfType.signed, dfType.width, rhs.dfType.signed, rhs.width)
-          val dfValIR =
-            val rhsSignFix: DFValOf[DFSInt[Int]] =
-              if (dfType.signed != rhs.dfType.signed)
-                rhs.asIR.asValOf[DFUInt[Int]].signed.asIR.asValOf[DFSInt[Int]]
-              else rhs.asIR.asValOf[DFSInt[Int]]
-            if (rhsSignFix.width < dfType.width)
-              rhsSignFix.resize(dfType.width).asIR
-            else rhsSignFix.asIR
-          dfValIR.asValOf[DFXInt[LS, LW]]
-        end conv
+        def conv(dfType: DFXInt[LS, LW], value: R): Out = ???
       end given
     end TC
 
@@ -922,320 +625,9 @@ object DFXInt:
           op: ValueOf[Op],
           castling: ValueOf[C]
       ): Compare[DFXInt[LS, LW], R, Op, C] with
-        def conv(dfType: DFXInt[LS, LW], arg: R): DFXInt[LS, LW] <> VAL =
-          import Ops.resize
-          import DFUInt.Val.Ops.signed
-          given dfcAnon: DFC = dfc.anonymize
-          val dfValArg = ic(arg)
-          check(
-            dfType.signed,
-            dfType.width,
-            dfValArg.dfType.signed,
-            dfValArg.dfType.width
-          )
-          val dfValArgResized =
-            if (dfValArg.width < dfType.width) dfValArg.resize(dfType.width)
-            else dfValArg
-          dfValArgResized.asIR.asValOf[DFXInt[LS, LW]]
-        end conv
+        def conv(dfType: DFXInt[LS, LW], arg: R): DFXInt[LS, LW] <> VAL = ???
       end DFXIntCompare
     end Compare
-
-    object Ops:
-      export DFUInt.Val.Ops.*
-      export DFSInt.Val.Ops.*
-      extension [S <: Boolean, W <: Int](lhs: DFValOf[DFXInt[S, W]])
-        @targetName("resizeDFXInt")
-        def resize[RW <: Int](
-            updatedWidth: Inlined[RW]
-        )(using
-            check: Width.Check[S, RW],
-            dfc: DFC
-        ): DFValOf[DFXInt[S, RW]] = trydf {
-          val signed = lhs.dfType.signed
-          check(signed, updatedWidth)
-          import Token.Ops.{resize => resizeToken}
-          // TODO: why this causes anonymous references?
-//          if (lhs.width == updatedWidth) lhs.asIR.asValOf[DFXInt[S, RW]]
-//          else
-          DFVal.Alias.AsIs(
-            DFXInt(signed, updatedWidth),
-            lhs,
-            _.resizeToken(updatedWidth)
-          )
-        }
-        end resize
-        def <[R](rhs: Exact[R])(using
-            dfc: DFC,
-            op: DFVal.Compare[DFXInt[S, W], R, FuncOp.<.type, false]
-        ): DFBool <> VAL = trydf { op(lhs, rhs) }
-        def <=[R](rhs: Exact[R])(using
-            dfc: DFC,
-            op: DFVal.Compare[DFXInt[S, W], R, FuncOp.<=.type, false]
-        ): DFBool <> VAL = trydf { op(lhs, rhs) }
-        def >[R](rhs: Exact[R])(using
-            dfc: DFC,
-            op: DFVal.Compare[DFXInt[S, W], R, FuncOp.>.type, false]
-        ): DFBool <> VAL = trydf { op(lhs, rhs) }
-        def >=[R](rhs: Exact[R])(using
-            dfc: DFC,
-            op: DFVal.Compare[DFXInt[S, W], R, FuncOp.>=.type, false]
-        ): DFBool <> VAL = trydf { op(lhs, rhs) }
-        @targetName("shiftRightDFXInt")
-        def >>[R](shift: Exact[R])(using
-            c: DFUInt.Val.UBArg[W, R],
-            dfc: DFC
-        ): DFValOf[DFXInt[S, W]] = trydf {
-          val shiftVal = c(lhs.width, shift)
-          DFVal.Func(lhs.dfType, FuncOp.>>, List(lhs, shiftVal))
-        }
-        @targetName("shiftLeftDFXInt")
-        def <<[R](shift: Exact[R])(using
-            c: DFUInt.Val.UBArg[W, R],
-            dfc: DFC
-        ): DFValOf[DFXInt[S, W]] = trydf {
-          val shiftVal = c(lhs.width, shift)
-          DFVal.Func(lhs.dfType, FuncOp.<<, List(lhs, shiftVal))
-        }
-      end extension
-
-      extension [L](lhs: L)
-        def <[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> VAL
-        )(using es: Exact.Summon[L, lhs.type])(using
-            dfc: DFC,
-            op: DFVal.Compare[DFXInt[RS, RW], es.Out, FuncOp.<.type, true]
-        ): DFBool <> VAL = trydf { op(rhs, es(lhs)) }
-        def <=[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> VAL
-        )(using es: Exact.Summon[L, lhs.type])(using
-            dfc: DFC,
-            op: DFVal.Compare[DFXInt[RS, RW], es.Out, FuncOp.<=.type, true]
-        ): DFBool <> VAL = trydf { op(rhs, es(lhs)) }
-        def >[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> VAL
-        )(using es: Exact.Summon[L, lhs.type])(using
-            dfc: DFC,
-            op: DFVal.Compare[DFXInt[RS, RW], es.Out, FuncOp.>.type, true]
-        ): DFBool <> VAL = trydf { op(rhs, es(lhs)) }
-        def >=[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> VAL
-        )(using es: Exact.Summon[L, lhs.type])(using
-            dfc: DFC,
-            op: DFVal.Compare[DFXInt[RS, RW], es.Out, FuncOp.>=.type, true]
-        ): DFBool <> VAL = trydf { op(rhs, es(lhs)) }
-      end extension
-      private def arithOp[
-          OS <: Boolean,
-          OW <: Int,
-          LS <: Boolean,
-          LW <: Int,
-          RS <: Boolean,
-          RW <: Int
-      ](
-          dfType: DFXInt[OS, OW],
-          op: FuncOp,
-          lhs: DFValOf[DFXInt[LS, LW]],
-          rhs: DFValOf[DFXInt[RS, RW]]
-      )(using dfc: DFC): DFValOf[DFXInt[OS, OW]] =
-        given DFC = dfc.anonymize
-        val rhsFixed =
-          if (lhs.dfType.signed && !rhs.dfType.signed)
-            rhs.asIR.asValOf[DFUInt[RW]].signed
-          else rhs.resize(lhs.width) // TODO: maybe do this in a separate stage?
-        DFVal.Func(dfType, op, List(lhs, rhsFixed))
-      end arithOp
-      extension [LS <: Boolean, LW <: Int](lhs: DFXInt[LS, LW] <> VAL)
-        def +[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            dfc: DFC,
-            check: ArithCheck[LS, LW, icR.OutS, icR.OutW, icR.IsScalaInt, false]
-        ): DFValOf[DFXInt[LS, LW]] = trydf {
-          val rhsVal = icR(rhs)
-          check(lhs.dfType, rhsVal.dfType)
-          arithOp(lhs.dfType, FuncOp.+, lhs, rhsVal)
-        }
-        def -[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            dfc: DFC,
-            check: ArithCheck[LS, LW, icR.OutS, icR.OutW, icR.IsScalaInt, false]
-        ): DFValOf[DFXInt[LS, LW]] = trydf {
-          val rhsVal = icR(rhs)
-          check(lhs.dfType, rhsVal.dfType)
-          arithOp(lhs.dfType, FuncOp.-, lhs, rhsVal)
-        }
-        def *[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            dfc: DFC,
-            check: ArithCheck[LS, LW, icR.OutS, icR.OutW, icR.IsScalaInt, false]
-        ): DFValOf[DFXInt[LS, LW]] = trydf {
-          val rhsVal = icR(rhs)
-          check(lhs.dfType, rhsVal.dfType)
-          arithOp(lhs.dfType, FuncOp.`*`, lhs, rhsVal)
-        }
-        def /[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            dfc: DFC,
-            check: ArithCheck[LS, LW, icR.OutS, icR.OutW, icR.IsScalaInt, false]
-        ): DFValOf[DFXInt[LS, LW]] = trydf {
-          val rhsVal = icR(rhs)
-          check(lhs.dfType, rhsVal.dfType)
-          arithOp(lhs.dfType, FuncOp./, lhs, rhsVal)
-        }
-        def %[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            dfc: DFC,
-            check: ArithCheck[LS, LW, icR.OutS, icR.OutW, icR.IsScalaInt, false]
-        ): DFValOf[DFXInt[LS, LW]] = trydf {
-          val rhsVal = icR(rhs)
-          check(lhs.dfType, rhsVal.dfType)
-          arithOp(lhs.dfType, FuncOp.%, lhs, rhsVal)
-        }
-        def +^[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            dfc: DFC,
-            check: SignCheck[LS, icR.OutS, icR.IsScalaInt, false]
-        ): DFValOf[DFXInt[LS, Max[LW, icR.OutW] + 1]] = trydf {
-          val rhsVal = icR(rhs)
-          check(lhs.dfType.signed, rhsVal.dfType.signed)
-          val width = Inlined.forced[Max[LW, icR.OutW] + 1](
-            (lhs.dfType.width.value max rhsVal.dfType.width) + 1
-          )
-          val dfType = DFXInt(lhs.dfType.signed, width)
-          arithOp(dfType, FuncOp.+, lhs, rhsVal)
-        }
-        def -^[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            dfc: DFC,
-            check: SignCheck[LS, icR.OutS, icR.IsScalaInt, false]
-        ): DFValOf[DFXInt[LS, Max[LW, icR.OutW] + 1]] = trydf {
-          val rhsVal = icR(rhs)
-          check(lhs.dfType.signed, rhsVal.dfType.signed)
-          val width = Inlined.forced[Max[LW, icR.OutW] + 1](
-            (lhs.dfType.width.value max rhsVal.dfType.width) + 1
-          )
-          val dfType = DFXInt(lhs.dfType.signed, width)
-          arithOp(dfType, FuncOp.-, lhs, rhsVal)
-        }
-        def *^[R](rhs: Exact[R])(using icR: Candidate[R])(using
-            dfc: DFC,
-            check: SignCheck[LS, icR.OutS, icR.IsScalaInt, false]
-        ): DFValOf[DFXInt[LS, LW + icR.OutW]] = trydf {
-          val rhsVal = icR(rhs)
-          check(lhs.dfType.signed, rhsVal.dfType.signed)
-          val width = Inlined.forced[LW + icR.OutW](
-            lhs.dfType.width.value + rhsVal.dfType.width
-          )
-          val dfType = DFXInt(lhs.dfType.signed, width)
-          arithOp(dfType, FuncOp.`*`, lhs, rhsVal)
-        }
-      end extension
-      extension [L](lhs: L)
-        def +[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> VAL
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            dfc: DFC,
-            check: ArithCheck[RS, RW, icL.OutS, icL.OutW, icL.IsScalaInt, true]
-        ): DFValOf[DFXInt[icL.OutS, icL.OutW]] = trydf {
-          val lhsVal = icL(sL(lhs))
-          check(rhs.dfType, lhsVal.dfType)
-          DFVal.Func(lhsVal.dfType, FuncOp.+, List(lhsVal, rhs))
-        }
-        def -[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> VAL
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            dfc: DFC,
-            check: ArithCheck[RS, RW, icL.OutS, icL.OutW, icL.IsScalaInt, true]
-        ): DFValOf[DFXInt[icL.OutS, icL.OutW]] = trydf {
-          val lhsVal = icL(sL(lhs))
-          check(rhs.dfType, lhsVal.dfType)
-          DFVal.Func(lhsVal.dfType, FuncOp.-, List(lhsVal, rhs))
-        }
-        def *[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> VAL
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            dfc: DFC,
-            check: ArithCheck[RS, RW, icL.OutS, icL.OutW, icL.IsScalaInt, true]
-        ): DFValOf[DFXInt[icL.OutS, icL.OutW]] = trydf {
-          val lhsVal = icL(sL(lhs))
-          check(rhs.dfType, lhsVal.dfType)
-          DFVal.Func(lhsVal.dfType, FuncOp.`*`, List(lhsVal, rhs))
-        }
-        def /[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> VAL
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            dfc: DFC,
-            check: ArithCheck[RS, RW, icL.OutS, icL.OutW, icL.IsScalaInt, true]
-        ): DFValOf[DFXInt[icL.OutS, icL.OutW]] = trydf {
-          val lhsVal = icL(sL(lhs))
-          check(rhs.dfType, lhsVal.dfType)
-          DFVal.Func(lhsVal.dfType, FuncOp./, List(lhsVal, rhs))
-        }
-        def %[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> VAL
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            dfc: DFC,
-            check: ArithCheck[RS, RW, icL.OutS, icL.OutW, icL.IsScalaInt, true]
-        ): DFValOf[DFXInt[icL.OutS, icL.OutW]] = trydf {
-          val lhsVal = icL(sL(lhs))
-          check(rhs.dfType, lhsVal.dfType)
-          DFVal.Func(lhsVal.dfType, FuncOp.%, List(lhsVal, rhs))
-        }
-        def +^[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> VAL
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            dfc: DFC,
-            check: SignCheck[RS, icL.OutS, icL.IsScalaInt, true]
-        ): DFValOf[DFXInt[icL.OutS, Max[icL.OutW, RW] + 1]] = trydf {
-          val lhsVal = icL(sL(lhs))
-          check(rhs.dfType.signed, lhsVal.dfType.signed)
-          val width = Inlined.forced[Max[icL.OutW, RW] + 1](
-            (lhsVal.dfType.width.value max rhs.dfType.width) + 1
-          )
-          val dfType = DFXInt(lhsVal.dfType.signed, width)
-          DFVal.Func(dfType, FuncOp.+, List(lhsVal, rhs))
-        }
-        def -^[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> VAL
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            dfc: DFC,
-            check: SignCheck[RS, icL.OutS, icL.IsScalaInt, true]
-        ): DFValOf[DFXInt[icL.OutS, Max[icL.OutW, RW] + 1]] = trydf {
-          val lhsVal = icL(sL(lhs))
-          check(rhs.dfType.signed, lhsVal.dfType.signed)
-          val width = Inlined.forced[Max[icL.OutW, RW] + 1](
-            (lhsVal.dfType.width.value max rhs.dfType.width) + 1
-          )
-          val dfType = DFXInt(lhsVal.dfType.signed, width)
-          DFVal.Func(dfType, FuncOp.-, List(lhsVal, rhs))
-        }
-        end -^
-        def *^[RS <: Boolean, RW <: Int](
-            rhs: DFXInt[RS, RW] <> VAL
-        )(using sL: Exact.Summon[L, lhs.type])(using
-            icL: Candidate[sL.Out]
-        )(using
-            dfc: DFC,
-            check: SignCheck[RS, icL.OutS, icL.IsScalaInt, true]
-        ): DFValOf[DFXInt[icL.OutS, icL.OutW + RW]] = trydf {
-          val lhsVal = icL(sL(lhs))
-          check(rhs.dfType.signed, lhsVal.dfType.signed)
-          val width = Inlined.forced[icL.OutW + RW](
-            lhsVal.dfType.width.value + rhs.dfType.width
-          )
-          val dfType = DFXInt(lhsVal.dfType.signed, width)
-          DFVal.Func(dfType, FuncOp.`*`, List(lhsVal, rhs))
-        }
-        end *^
-      end extension
-    end Ops
   end Val
 end DFXInt
 
@@ -1281,18 +673,7 @@ object DFUInt:
       ]
 
   type Token[W <: Int] = DFDecimal.Token[false, W, 0]
-  object Token:
-    object Ops:
-      extension [W <: Int](lhs: Token[W])
-        def signed: DFSInt.Token[W + 1] =
-          import DFToken.Ops.bits
-          import DFXInt.Token.Ops.resize
-          import DFBits.Token.Ops.sint
-          lhs.resize(lhs.width + 1).bits.sint
-        @targetName("negateDFUIntToken")
-        def unary_- : DFSInt.Token[W + 1] =
-          import DFSInt.Token.Ops.unary_- as negate
-          lhs.signed.negate
+  object Token
 
   object Val:
     trait UBArg[UB <: Int, R]:
@@ -1353,17 +734,6 @@ object DFUInt:
           argVal.asIR.asValOf[DFUInt[OutW]]
         end apply
     end UBArg
-    object Ops:
-      extension [W <: Int](lhs: DFValOf[DFUInt[W]])
-        def signed(using DFC): DFValOf[DFSInt[W + 1]] = trydf {
-          import Token.Ops.{signed => signedToken}
-          DFVal.Alias.AsIs(DFSInt(lhs.width + 1), lhs, _.signedToken)
-        }
-        @targetName("negateDFUInt")
-        def unary_-(using DFC): DFValOf[DFSInt[W + 1]] = trydf {
-          import DFSInt.Val.Ops.unary_- as negate
-          lhs.signed.negate
-        }
   end Val
 
 end DFUInt
@@ -1376,17 +746,6 @@ object DFSInt:
   def apply[W <: Int](using dfType: DFSInt[W]): DFSInt[W] = dfType
 
   type Token[W <: Int] = DFDecimal.Token[true, W, 0]
-  object Token:
-    object Ops:
-      extension [W <: Int](lhs: Token[W])
-        @targetName("negateDFSIntToken")
-        def unary_- : Token[W] =
-          DFXInt.Token(true, lhs.width, lhs.data.map(-_))
-  object Val:
-    object Ops:
-      extension [W <: Int](lhs: DFValOf[DFSInt[W]])
-        @targetName("negateDFSInt")
-        def unary_-(using DFC): DFValOf[DFSInt[W]] = trydf {
-          DFVal.Func(lhs.dfType, FuncOp.unary_-, List(lhs))
-        }
+  object Token
+  object Val
 end DFSInt
