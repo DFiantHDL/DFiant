@@ -45,36 +45,6 @@ object DFVector:
       ]
 
   sealed class ComposedModifier[D <: Int, M <: ModifierAny](val cellDim: D, val modifier: M)
-  object Ops:
-    extension [T <: DFType.Supported, D <: Int](t: T)(using tc: DFType.TC[T])
-      // transparent inline def X(inline cellDim: Int*): DFType =
-      //   x(dfType, cellDim: _*)
-      inline def X(
-          cellDim: Inlined[D]
-      ): DFVector[tc.Type, Tuple1[D]] =
-        DFVector(tc(t), Tuple1(cellDim))
-    extension [T <: DFType.Supported, D <: Int, M <: ModifierAny](t: T)(using tc: DFType.TC[T])
-      def X(
-          composedModifier: ComposedModifier[D, M]
-      )(using DFC): DFVal[DFVector[tc.Type, Tuple1[D]], M] =
-        DFVal.Dcl(DFVector(tc(t), Tuple1(composedModifier.cellDim)), composedModifier.modifier)
-//      inline def X(
-//          inline cellDim0: Int,
-//          inline cellDim1: Int
-//      ): DFVector[tc.Type, Tuple2[cellDim0.type, cellDim1.type]] =
-//        DFVector(tc(t), Tuple2(cellDim0, cellDim1))
-//      inline def X(
-//          inline cellDim0: Int,
-//          inline cellDim1: Int,
-//          inline cellDim2: Int
-//      ): DFVector[tc.Type, Tuple3[
-//        cellDim0.type,
-//        cellDim1.type,
-//        cellDim2.type
-//      ]] =
-//        DFVector(tc(t), Tuple3(cellDim0, cellDim1, cellDim2))
-    end extension
-  end Ops
 
   type Token[+T <: DFTypeAny, +D <: NonEmptyTuple] = DFToken[DFVector[T, D]]
   object Token:
@@ -125,28 +95,6 @@ object DFVector:
         def conv(dfType: DFVector[T, Tuple1[D1]], arg: R): Out =
           Token(dfType, arg.map(tc.conv(dfType.cellType, _).asIR.data).toVector)
     end Compare
-    object Ops:
-      extension [T <: DFTypeAny, D1 <: Int](lhs: Token[T, Tuple1[D1]])
-        @targetName("applyDFVector")
-        def apply[I <: Int](
-            idx: Inlined[I]
-        )(using
-            check: BitIndex.Check[I, D1]
-        ): DFToken[T] =
-          check(idx, lhs.dfType.cellDims.head)
-          ir.DFToken
-            .forced(lhs.dfType.asIR.cellType, lhs.data(idx))
-            .asTokenOf[T]
-        def elements: Vector[DFToken[T]] =
-          val elementType = lhs.dfType.asIR.cellType
-          Vector.tabulate(lhs.dfType.cellDims.head)(i =>
-            ir.DFToken
-              .forced(elementType, lhs.data(i))
-              .asTokenOf[T]
-          )
-      end extension
-    end Ops
-
   end Token
 
   object Val:
@@ -211,28 +159,5 @@ object DFVector:
           DFVal.Func(dfType, FuncOp.++, dfVals)(using dfc.anonymize)
       end DFVectorCompareDFValVector
     end Compare
-    object Ops:
-      extension [T <: DFTypeAny, D1 <: Int, M <: ModifierAny](
-          lhs: DFVal[DFVector[T, Tuple1[D1]], M]
-      )
-        @targetName("applyDFVector")
-        def apply[I](
-            idx: Exact[I]
-        )(using
-            c: DFUInt.Val.UBArg[D1, I],
-            dfc: DFC
-        ): DFVal[T, M] = trydf {
-          val idxVal = c(Inlined.forced[D1](lhs.dfType.cellDims.head), idx)
-          DFVal.Alias.ApplyIdx(lhs.dfType.cellType, lhs, idxVal)
-        }
-        def elements(using DFC): Vector[DFValOf[T]] =
-          import DFDecimal.Token.StrInterp.d
-          val elementType = lhs.dfType.cellType
-          Vector.tabulate(lhs.dfType.cellDims.head)(i =>
-            val idxVal = DFVal.Const(d"$i".asIR.asTokenOf[DFUInt[Int]], false)
-            DFVal.Alias.ApplyIdx(elementType, lhs, idxVal)(using dfc.anonymize)
-          )
-      end extension
-    end Ops
   end Val
 end DFVector
