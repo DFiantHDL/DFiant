@@ -133,23 +133,6 @@ object DFTuple:
             zipper(dfType.fieldList, value.toList).map(_.asIR.data)
           )
     end TC
-
-    object Compare:
-      import DFToken.Compare
-      given DFTupleTokenFromTuple[
-          T <: NonEmptyTuple,
-          V <: NonEmptyTuple,
-          Op <: FuncOp,
-          C <: Boolean
-      ](using
-          zipper: TCZipper[T, V, DFTokenAny, [T <: DFTypeAny, R] =>> Compare[T, R, Op, C]]
-      ): Compare[DFTuple[T], V, Op, C] with
-        def conv(dfType: DFTuple[T], value: V): Out =
-          DFTuple.Token[T](
-            dfType,
-            zipper(dfType.fieldList, value.toList).map(_.asIR.data)
-          )
-    end Compare
   end Token
 
   object Val:
@@ -178,23 +161,5 @@ object DFTuple:
             zipper(dfType.fieldList, value.toList)
           DFVal.Func(dfType, FuncOp.++, dfVals)(using dfc.anonymize)
     end TC
-
-    object Compare:
-      import DFVal.Compare
-      given DFTupleArg[
-          T <: NonEmptyTuple,
-          R <: NonEmptyTuple,
-          Op <: FuncOp,
-          C <: Boolean
-      ](using
-          zipper: TCZipper[T, R, DFValAny, [T <: DFTypeAny, R] =>> Compare[T, R, Op, C]],
-          dfc: DFC
-      ): Compare[DFTuple[T], R, Op, C] with
-        def conv(dfType: DFTuple[T], value: R): Out =
-          val dfVals =
-            zipper(dfType.fieldList, value.toList)
-          DFVal.Func(dfType, FuncOp.++, dfVals)(using dfc.anonymize)
-    end Compare
-
   end Val
 end DFTuple

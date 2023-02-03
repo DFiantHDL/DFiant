@@ -177,29 +177,6 @@ object DFStruct:
           sf.check(dfType, value.dfType)
           value.asIR.asTokenOf[DFStruct[F]]
     end TC
-
-    object Compare:
-      import DFToken.Compare
-      given DFStructTokenFromCC[
-          F <: Fields,
-          RF <: Fields,
-          Op <: FuncOp,
-          C <: Boolean
-      ](using sf: SameFields[F, RF]): Compare[DFStruct[F], RF, Op, C] with
-        def conv(dfType: DFStruct[F], value: RF): Out =
-          sf.check(dfType, DFStruct(value))
-          Token(dfType, value)
-      given DFStructTokenFromStruct[
-          F <: Fields,
-          RF <: Fields,
-          R <: Token[RF],
-          Op <: FuncOp,
-          C <: Boolean
-      ](using sf: SameFields[F, RF]): Compare[DFStruct[F], R, Op, C] with
-        def conv(dfType: DFStruct[F], value: R): Out =
-          sf.check(dfType, value.dfType)
-          value.asIR.asTokenOf[DFStruct[F]]
-    end Compare
   end Token
 
   object Val:
@@ -234,30 +211,5 @@ object DFStruct:
           sf.check(dfType, value.dfType)
           value.asIR.asValOf[DFStruct[F]]
     end TC
-    object Compare:
-      import DFVal.Compare
-      given DFStructArgCC[
-          F <: Fields,
-          RF <: Fields,
-          Op <: FuncOp,
-          C <: Boolean
-      ](using dfc: DFC, sf: SameFields[F, RF]): Compare[DFStruct[F], RF, Op, C] with
-        def conv(dfType: DFStruct[F], value: RF): Out =
-          sf.check(dfType, DFStruct(value))
-          val dfVals = value.productIterator.map { case dfVal: DFVal[_, _] =>
-            dfVal
-          }.toList
-          DFVal.Func(dfType, FuncOp.++, dfVals)(using dfc.anonymize)
-      given DFStructArgStruct[
-          F <: Fields,
-          RF <: Fields,
-          R <: DFValOf[DFStruct[RF]],
-          Op <: FuncOp,
-          C <: Boolean
-      ](using dfc: DFC, sf: SameFields[F, RF]): Compare[DFStruct[F], R, Op, C] with
-        def conv(dfType: DFStruct[F], value: R): Out =
-          sf.check(dfType, value.dfType)
-          value.asIR.asValOf[DFStruct[F]]
-    end Compare
   end Val
 end DFStruct
