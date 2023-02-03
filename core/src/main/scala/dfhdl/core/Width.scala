@@ -16,8 +16,6 @@ object Width:
     type Out = 1
   given fromDFBits[W <: Int]: Width[DFBits[W]] with
     type Out = W
-  given fromDFDecimal[S <: Boolean, W <: Int, F <: Int]: Width[DFDecimal[S, W, F]] with
-    type Out = W
   transparent inline given [T]: Width[T] = ${ getWidthMacro[T] }
   extension (using quotes: Quotes)(dfTpe: quotes.reflect.TypeRepr)
     def +(rhs: quotes.reflect.TypeRepr): quotes.reflect.TypeRepr =
@@ -60,8 +58,6 @@ object Width:
             case '[DFBoolOrBit] =>
               ConstantType(IntConstant(1))
             case '[DFBits[w]] =>
-              TypeRepr.of[w].calcWidth
-            case '[DFDecimal[s, w, f]] =>
               TypeRepr.of[w].calcWidth
             case '[DFVector[t, d]] =>
               val cellWidth = TypeRepr.of[t].calcWidth
