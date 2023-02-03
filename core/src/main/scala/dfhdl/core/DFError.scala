@@ -17,9 +17,7 @@ object DFError:
   object FakeEnum extends DFError("This value of enum is no meant to be accessed.")
   final class Derived(from: DFError) extends DFError(from.dfMsg)
 
-  extension (dfErr: DFError)
-    def asFE[T <: DFTypeAny]: T = DFType(dfErr).asInstanceOf[T]
-    def asTokenOf[T <: DFTypeAny]: DFToken[T] = new DFToken[T](dfErr)
+  extension (dfErr: DFError) def asFE[T <: DFTypeAny]: T = DFType(dfErr).asInstanceOf[T]
 end DFError
 
 class Logger:
@@ -28,20 +26,6 @@ class Logger:
     errors = err :: errors
   def getErrors: List[DFError] = errors.reverse
   def clearErrors(): Unit = errors = Nil
-
-//@targetName("tryDFType")
-//def trydf[T <: DFTypeAny](block: => T): T =
-//  try block
-//  catch
-//    case e: IllegalArgumentException => DFError.Basic(e).asFE[T]
-//    case e: DFError                  => e.asFE[T]
-//
-//@targetName("tryDFToken")
-//def trydf[T <: DFTypeAny](block: => DFToken[T]): DFToken[T] =
-//  try block
-//  catch
-//    case e: IllegalArgumentException => DFError.Basic(e).asTokenOf[T]
-//    case e: DFError                  => e.asTokenOf[T]
 
 def exitWithError(msg: String): Unit =
   System.err.println(msg)
