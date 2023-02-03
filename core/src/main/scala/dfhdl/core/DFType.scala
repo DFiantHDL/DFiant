@@ -1,17 +1,5 @@
 package dfhdl.core
 import dfhdl.compiler.ir
-import dfhdl.internals.*
-import scala.annotation.targetName
-import compiletime.*
-import scala.quoted.*
-import collection.mutable
-import collection.immutable.ListMap
-
-sealed trait Args
-sealed trait NoArgs extends Args
-sealed trait Args1[T1] extends Args
-sealed trait Args2[T1, T2] extends Args
-sealed trait Args3[T1, T2, T3] extends Args
 
 final class DFType[+T <: ir.DFType](val value: T | DFError) extends AnyVal:
   override def toString: String = value.toString
