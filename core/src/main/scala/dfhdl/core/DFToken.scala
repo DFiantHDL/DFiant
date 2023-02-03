@@ -21,14 +21,10 @@ final class DFToken[+T <: DFTypeAny](val value: ir.DFTokenAny | DFError)
 
   transparent inline def ==[R](
       inline that: R
-  )(using DFC): DFBool <> TOKEN = ${
-    DFToken.equalityMacro[T, R, FuncOp.===.type]('this, 'that)
-  }
+  )(using DFC): DFBool <> TOKEN = ???
   transparent inline def !=[R](
       inline that: R
-  )(using DFC): DFBool <> TOKEN = ${
-    DFToken.equalityMacro[T, R, FuncOp.=!=.type]('this, 'that)
-  }
+  )(using DFC): DFBool <> TOKEN = ???
   override def toString: String = value.toString
 end DFToken
 
@@ -69,29 +65,6 @@ object DFToken:
     end refineMacro
   end Refiner
 
-  def equalityMacro[T <: DFTypeAny, R, Op <: FuncOp](
-      token: Expr[DFToken[T]],
-      arg: Expr[R]
-  )(using Quotes, Type[T], Type[R], Type[Op]): Expr[DFToken[DFBool]] =
-    import quotes.reflect.*
-    val exact = arg.asTerm.exactTerm
-    val exactExpr = exact.asExpr
-    val exactType = exact.tpe.asTypeOf[Any]
-    '{
-      val c = compiletime.summonInline[
-        DFToken.Compare[T, exactType.Underlying, Op, false]
-      ]
-      c($token, $exactExpr)(using compiletime.summonInline[ValueOf[Op]], new ValueOf[false](false))
-    }
-  end equalityMacro
-
-  // Implicit conversions for tokens
-  implicit inline def fromTC[T <: DFTypeAny, V](
-      value: V
-  )(using es: Exact.Summon[V, value.type])(using
-      dfType: T,
-      tc: DFToken.TC[T, es.Out]
-  ): DFToken[T] = tc(dfType, es(value))
   // implicit conversion to allow a boolean/bit token to be a Scala Boolean
   implicit def fromDFBoolOrBitToken(from: DFToken[DFBoolOrBit]): Boolean =
     from.asIR.data.asInstanceOf[ir.DFBool.Data].get
@@ -117,171 +90,4 @@ object DFToken:
   extension [T <: ir.DFType, Data](
       token: DFToken[DFType[ir.DFType.Aux[T, Data], Args]]
   ) def data: Data = token.asIR.data.asInstanceOf[Data]
-
-  @implicitNotFound("Unsupported token value ${V} for dataflow type ${T}")
-  trait TC[T <: DFTypeAny, V] extends TCConv[T, V, DFTokenAny]:
-    type Out = DFToken[T]
-    final def apply(dfType: T, value: V): Out = conv(dfType, value)
-
-  trait TCLPLP:
-    transparent inline given errorDMZ[T <: DFTypeAny, R](using
-        t: ShowType[T],
-        r: ShowType[R]
-    ): TC[T, R] =
-      Error.call[
-        (
-            "Unsupported value of type `",
-            r.Out,
-            "` for dataflow receiver type `",
-            t.Out,
-            "`."
-        )
-      ]
-    inline given sameTokenType[T <: DFTypeAny, V <: T <> TOKEN]: TC[T, V] with
-      def conv(dfType: T, value: V): Out =
-        require(dfType == value.dfType)
-        value
-  end TCLPLP
-  trait TCLP extends TCLPLP
-  object TC extends TCLP
-
-  @implicitNotFound("Cannot compare token of ${T} with value of ${V}")
-  trait Compare[T <: DFTypeAny, V, Op <: FuncOp, C <: Boolean] extends TCConv[T, V, DFTokenAny]:
-    type Out = DFToken[T]
-    def apply(token: DFToken[T], arg: V)(using
-        op: ValueOf[Op],
-        castling: ValueOf[C]
-    ): DFToken[DFBool] =
-      given CanEqual[Any, Any] = CanEqual.derived
-      val tokenArg = conv(token.dfType, arg)
-      require(token.dfType == tokenArg.dfType)
-      val dataOut = op.value match
-        case FuncOp.=== => token.asIR.data == tokenArg.asIR.data
-        case FuncOp.=!= => token.asIR.data != tokenArg.asIR.data
-        case _          => throw new IllegalArgumentException("Unsupported Op")
-      DFBoolOrBit.Token(DFBool, dataOut)
-  end Compare
-
-  trait CompareLPLP:
-    transparent inline given errorDMZ[
-        T <: DFTypeAny,
-        R,
-        Op <: FuncOp,
-        C <: Boolean
-    ](using
-        t: ShowType[T],
-        r: ShowType[R]
-    ): Compare[T, R, Op, C] =
-      Error.call[
-        (
-            "Cannot compare token of type `",
-            t.Out,
-            "` with value of type `",
-            r.Out,
-            "`."
-        )
-      ]
-    inline given sameTokenType[T <: DFTypeAny, V <: T <> TOKEN, Op <: FuncOp, C <: Boolean](using
-        op: ValueOf[Op]
-    ): Compare[T, V, Op, C] with
-      def conv(dfType: T, arg: V): DFToken[T] = arg
-  end CompareLPLP
-  trait CompareLP extends CompareLPLP
-
-  trait Value[T <: DFTypeAny]:
-    type Out <: DFTokenAny
-    def apply(dfType: T): Out
-  object Value:
-    transparent inline implicit def fromValue[T <: DFTypeAny, V](
-        inline value: V
-    ): Value[T] = ${ fromValueMacro[T, V]('value) }
-
-    def fromValueMacro[T <: DFTypeAny, V](
-        value: Expr[V]
-    )(using Quotes, Type[T], Type[V]): Expr[Value[T]] =
-      import quotes.reflect.*
-      val term = value.asTerm.underlyingArgument.exactTerm
-      val tpe = term.tpe.asTypeOf[Any]
-      '{
-        val tc = compiletime.summonInline[DFToken.TC[T, tpe.Underlying]]
-        new Value[T]:
-          type Out = tc.Out
-          def apply(dfType: T): Out =
-            tc(dfType, ${ term.asExpr })
-      }
-    end fromValueMacro
-  end Value
-  trait TupleValues[T <: NonEmptyTuple]:
-    def apply(dfType: DFTuple[T]): List[DFTokenAny]
-  object TupleValues:
-    transparent inline implicit def fromValue[T <: NonEmptyTuple, V](
-        inline value: V
-    ): TupleValues[T] = ${ fromValueMacro[T, V]('value) }
-
-    def fromValueMacro[T <: NonEmptyTuple, V](
-        value: Expr[V]
-    )(using Quotes, Type[T], Type[V]): Expr[TupleValues[T]] =
-      import quotes.reflect.*
-      val term = value.asTerm.underlyingArgument
-      val tTpe = TypeRepr.of[T]
-      extension (lhs: TypeRepr)
-        def tupleSigMatch(
-            rhs: TypeRepr,
-            tupleAndNonTupleMatch: Boolean
-        ): Boolean =
-          import quotes.reflect.*
-          (lhs.asType, rhs.asType) match
-            case ('[DFTuple[t]], '[Any]) =>
-              TypeRepr.of[t].tupleSigMatch(rhs, tupleAndNonTupleMatch)
-            case ('[Tuple], '[Tuple]) =>
-              val lArgs = lhs.getTupleArgs
-              val rArgs = rhs.getTupleArgs
-              if (lArgs.length != rArgs.length) false
-              else
-                (lArgs lazyZip rArgs).forall((l, r) => l.tupleSigMatch(r, true))
-            case ('[Tuple], '[Any]) => tupleAndNonTupleMatch
-            case ('[Any], '[Tuple]) => tupleAndNonTupleMatch
-            case _                  => true
-        end tupleSigMatch
-      end extension
-
-      val vTpe = term.tpe
-      val multiElements = vTpe.asTypeOf[Any] match
-        case '[NonEmptyTuple] =>
-          vTpe.getTupleArgs.forall(va => tTpe.tupleSigMatch(va, false))
-        case _ => false
-      // In the case we have a multiple elements in the tuple value that match the signature
-      // of the dataflow type, then each element is considered as a candidate
-      if (multiElements)
-        val Apply(_, vArgsTerm) = term: @unchecked
-        def tokens(dfType: Expr[DFTuple[T]]): List[Expr[DFTokenAny]] =
-          vArgsTerm.map { a =>
-            val aTerm = a.exactTerm
-            val aType = aTerm.tpe.asTypeOf[Any]
-            '{
-              val tc =
-                compiletime
-                  .summonInline[DFToken.TC[DFTuple[T], aType.Underlying]]
-              tc($dfType, ${ aTerm.asExpr })
-            }
-          }
-        '{
-          new TupleValues[T]:
-            def apply(dfType: DFTuple[T]): List[DFTokenAny] =
-              List(${ Expr.ofList(tokens('{ dfType })) }*)
-        }
-      // otherwise the entire tuple is considered the token candidate.
-      else
-        val vTerm = term.exactTerm
-        val vType = vTerm.tpe.asTypeOf[Any]
-        '{
-          val tc = compiletime
-            .summonInline[DFToken.TC[DFTuple[T], vType.Underlying]]
-          new TupleValues[T]:
-            def apply(dfType: DFTuple[T]): List[DFTokenAny] =
-              List(tc(dfType, ${ vTerm.asExpr }))
-        }
-      end if
-    end fromValueMacro
-  end TupleValues
 end DFToken

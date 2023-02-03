@@ -121,13 +121,6 @@ private object CompanionsDFBits:
       def valueBits: BitVector = token.data._1
       def bubbleBits: BitVector = token.data._2
 
-    object Conversions:
-      given DFBitsTokenConversionSing[W <: Int & Singleton, V](using
-          tc: DFToken.TC[DFBits[W], V],
-          w: ValueOf[W]
-      ): Conversion[V, DFBits[W] <> TOKEN] = value => tc(DFBits(valueOf[W]), value)
-    end Conversions
-
     @implicitNotFound(
       "Argument of type ${R} is not a proper candidate for a Bits token."
     )
