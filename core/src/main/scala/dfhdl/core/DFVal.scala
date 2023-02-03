@@ -464,15 +464,6 @@ object DFVal:
         )
         DFVal.Const(value)
   end TCLP
-  object TC extends TCLP:
-    export DFBoolOrBit.Val.TC.given
-    export DFBits.Val.TC.given
-    export DFDecimal.Val.TC.given
-    export DFEnum.Val.TC.given
-    export DFVector.Val.TC.given
-    export DFTuple.Val.TC.given
-    export DFStruct.Val.TC.given
-    export DFOpaque.Val.TC.given
-  end TC
+  object TC extends TCLP
 
 end DFVal

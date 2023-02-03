@@ -143,19 +143,7 @@ object DFToken:
         value
   end TCLPLP
   trait TCLP extends TCLPLP
-  object TC extends TCLP:
-    export DFBoolOrBit.Token.TC.given
-    export DFBits.Token.TC.given
-    export DFDecimal.Token.TC.given
-    export DFEnum.Token.TC.given
-    export DFVector.Token.TC.given
-    export DFTuple.Token.TC.given
-    export DFStruct.Token.TC.given
-    export DFOpaque.Token.TC.given
-
-    given DFTokenFromBubble[T <: DFTypeAny, V <: Bubble]: TC[T, V] =
-      (dfType: T, value: V) => Bubble(dfType)
-  end TC
+  object TC extends TCLP
 
   @implicitNotFound("Cannot compare token of ${T} with value of ${V}")
   trait Compare[T <: DFTypeAny, V, Op <: FuncOp, C <: Boolean] extends TCConv[T, V, DFTokenAny]:
