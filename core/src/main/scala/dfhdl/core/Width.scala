@@ -1,6 +1,5 @@
 package dfhdl
 package core
-import internals.*
 
 trait Width[T]:
   type Out <: Int
@@ -9,6 +8,4 @@ object Width:
     type Out = 1
 end Width
 
-extension [T](t: T)(using tc: DFType.TC[T])
-  def width(using w: Width[tc.Type]): Inlined[w.Out] =
-    Inlined.forced[w.Out](tc(t).asIR.width)
+extension [T](t: T)(using tc: DFType.TC[T]) def width: Unit = tc(t).asIR
