@@ -16,8 +16,6 @@ object DFOpaque:
   abstract class Frontend[T <: DFTypeAny](final protected[core] val actualType: T) extends Abstract:
     type ActualType = T
 
-  given [T <: Abstract](using ce: ClassEv[T]): DFOpaque[T] = DFOpaque(ce.value)
-
   def apply[T <: Abstract](
       t: T
   ): DFOpaque[T] = ???
@@ -33,25 +31,11 @@ object DFOpaque:
         token: DFTokenAny
     ): Token[TFE] = ???
 
-    object TC:
-      import DFToken.TC
-      given DFOpaqueTokenFromDFOpaqueToken[
-          T <: Abstract,
-          RT <: Abstract,
-          V <: DFOpaque[RT] <> TOKEN
-      ](using dfc: DFC, st: RT <:< T): TC[DFOpaque[T], V] with
-        def conv(dfType: DFOpaque[T], value: V): Out = ???
+    object TC
   end Token
 
   object Val:
-    object TC:
-      import DFVal.TC
-      given DFOpaqueValFromDFOpaqueVal[
-          T <: Abstract,
-          RT <: Abstract,
-          V <: DFOpaque[RT] <> VAL
-      ](using dfc: DFC, st: RT <:< T): TC[DFOpaque[T], V] with
-        def conv(dfType: DFOpaque[T], value: V): Out = ???
+    object TC
   end Val
 
 end DFOpaque
