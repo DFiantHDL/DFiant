@@ -5,7 +5,6 @@ import dfhdl.internals.*
 import scala.annotation.{implicitNotFound, targetName}
 import scala.quoted.*
 type DFBits[W <: Int] = DFType[ir.DFBits, Args1[W]]
-import DFDecimal.Constraints.`LW == RW`
 
 object DFBits:
   def apply[W <: Int](width: Inlined[W])(using

@@ -21,8 +21,6 @@ val NoType = new DFType[ir.NoType.type, NoArgs](ir.NoType)
 object DFType:
   type Of[T <: Supported] <: DFTypeAny = T match
     case DFTypeAny => T <:! DFTypeAny
-    case Long      => DFSInt[64]
-    case Byte      => DFBits[8]
     case Boolean   => DFBool
 
   def of[T <: Supported](t: T): Of[T] = DFType(t).asInstanceOf[Of[T]]
@@ -31,8 +29,6 @@ object DFType:
       case dfType: DFTypeAny => dfType
       case _: Byte.type      => DFBits(8)
       case _: Boolean.type   => DFBool
-      case _: Int.type       => DFSInt(32)
-      case _: Long.type      => DFSInt(64)
   private[core] def unapply(t: Any): Option[DFTypeAny] = ???
 
   extension [T <: ir.DFType, A <: Args](dfType: DFType[T, A])
@@ -43,10 +39,8 @@ object DFType:
   transparent inline implicit def conv[T <: Supported](inline t: T)(implicit
       tc: TC[T]
   ): DFTypeAny = tc(t)
-  export DFDecimal.Extensions.*
   export DFBoolOrBit.given
   export DFBits.given
-  export DFDecimal.given
   export DFVector.given
 
   given [T <: DFTypeAny]: CanEqual[T, T] = CanEqual.derived
@@ -77,14 +71,6 @@ object DFType:
     transparent inline given ofByteCompanion: TC[Byte.type] = new TC[Byte.type]:
       type Type = DFBits[8]
       def apply(t: Byte.type): Type = DFBits(8)
-
-    transparent inline given ofIntCompanion: TC[Int.type] = new TC[Int.type]:
-      type Type = DFSInt[32]
-      def apply(t: Int.type): Type = DFSInt(32)
-
-    transparent inline given ofLongCompanion: TC[Long.type] = new TC[Long.type]:
-      type Type = DFSInt[64]
-      def apply(t: Long.type): Type = DFSInt(64)
 
     transparent inline given ofProductCompanion[T <: AnyRef]: TC[T] = ${ productMacro[T] }
     def productMacro[T <: AnyRef](using Quotes, Type[T]): Expr[TC[T]] =
