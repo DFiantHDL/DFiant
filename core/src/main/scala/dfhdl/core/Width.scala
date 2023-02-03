@@ -2,6 +2,8 @@ package dfhdl
 package core
 import compiler.ir
 
+object Timer
+
 type DFBoolOrBit = DFType[ir.DFBoolOrBit]
 object DFBoolOrBit:
   given DFBit = DFBit
