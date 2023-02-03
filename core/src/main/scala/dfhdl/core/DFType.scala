@@ -36,70 +36,16 @@ object DFType:
       case dfTypeIR: T @unchecked => dfTypeIR
       case err: DFError           => throw DFError.Derived(err)
   extension (dfType: ir.DFType) def asFE[T <: DFTypeAny]: T = new DFType(dfType).asInstanceOf[T]
-  transparent inline implicit def conv[T <: Supported](inline t: T)(implicit
-      tc: TC[T]
-  ): DFTypeAny = tc(t)
   export DFBoolOrBit.given
-  export DFBits.given
-
-  given [T <: DFTypeAny]: CanEqual[T, T] = CanEqual.derived
 
   type Supported = DFTypeAny | Byte | Long | Boolean | AnyRef
 
   trait TC[T]:
     type Type <: DFTypeAny
     def apply(t: T): Type
-  trait TCLP:
-    transparent inline given errorDMZ[T](using t: ShowType[T]): TC[T] =
-      Error.call[
-        (
-            "Dataflow type cannot be constructed from the type `",
-            t.Out,
-            "`."
-        )
-      ]
-  object TC extends TCLP:
+  object TC:
     transparent inline given ofDFType[T <: DFTypeAny]: TC[T] = new TC[T]:
       type Type = T
       def apply(t: T): Type = t
-
-    transparent inline given ofBooleanCompanion: TC[Boolean.type] = new TC[Boolean.type]:
-      type Type = DFBool
-      def apply(t: Boolean.type): Type = DFBool
-
-    transparent inline given ofByteCompanion: TC[Byte.type] = new TC[Byte.type]:
-      type Type = DFBits[8]
-      def apply(t: Byte.type): Type = DFBits(8)
-
-    transparent inline given ofProductCompanion[T <: AnyRef]: TC[T] = ${ productMacro[T] }
-    def productMacro[T <: AnyRef](using Quotes, Type[T]): Expr[TC[T]] =
-      import quotes.reflect.*
-      val compObjTpe = TypeRepr.of[T]
-      val compPrefix = compObjTpe match
-        case TermRef(pre, _) => pre
-        case _ =>
-          report.errorAndAbort("Case class companion must be a term ref")
-      val clsSym = compObjTpe.typeSymbol.companionClass
-      if !clsSym.paramSymss.forall(_.headOption.forall(_.isTerm)) then
-        report.errorAndAbort(
-          "Case class with type parameters are not supported"
-        )
-      val clsTpe = compPrefix.select(clsSym)
-      clsTpe.asType match
-        case _ =>
-          val badTypeStr = clsTpe.show
-          val msg =
-            if (badTypeStr.endsWith("$package.<none>"))
-              s"Type `$badTypeStr` is not a supported dataflow type constructor.\nHint: Are you missing an argument in your dataflow type constructor?"
-            else
-              s"Type `$badTypeStr` is not a supported product companion.\nHint: Did you forget to extends `Struct` or `Encode`?"
-          '{
-            compiletime.error(${ Expr(msg) })
-            new TC[T]:
-              type Type = DFTypeAny
-              def apply(t: T): Type = ???
-          }
-      end match
-    end productMacro
   end TC
 end DFType
