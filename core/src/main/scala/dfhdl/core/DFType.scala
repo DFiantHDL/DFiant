@@ -3,7 +3,7 @@ import dfhdl.compiler.ir
 
 final class DFError extends Exception("") derives CanEqual
 
-final class DFType[+T <: ir.DFType](val value: T | DFError) extends AnyVal:
+final class DFType[+T](val value: T | DFError) extends AnyVal:
   override def toString: String = value.toString
 type DFTypeAny = DFType[ir.DFType]
 
