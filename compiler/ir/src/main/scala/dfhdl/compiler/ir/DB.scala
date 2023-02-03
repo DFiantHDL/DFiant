@@ -172,28 +172,8 @@ final case class DB(
   lazy val designMemberTable: Map[DFDesignBlock, List[DFMember]] =
     Map(designMemberList: _*)
 
-  private def conditionalChainGen: Map[DFConditional.Header, List[DFConditional.Block]] =
-    val handled = mutable.Set.empty[DFConditional.Block]
-    members.foldRight(
-      Map.empty[DFConditional.Header, List[DFConditional.Block]]
-    ) {
-      case (m: DFConditional.Block, chainMap) if !handled.contains(m) =>
-        @tailrec def getChain(
-            block: DFConditional.Block,
-            chain: List[DFConditional.Block]
-        ): (DFConditional.Header, List[DFConditional.Block]) =
-          handled += block
-          block.prevBlockOrHeaderRef.get match
-            case header: DFConditional.Header => (header, block :: chain)
-            case prevBlock: DFConditional.Block =>
-              getChain(prevBlock, block :: chain)
-        chainMap + getChain(m, Nil)
-      case (_, chainMap) => chainMap
-    }
-  end conditionalChainGen
   // Maps the conditional construct header with the entire case/ifelse block chain
-  lazy val conditionalChainTable: Map[DFConditional.Header, List[DFConditional.Block]] =
-    conditionalChainGen
+  lazy val conditionalChainTable: Map[DFConditional.Header, List[DFConditional.Block]] = ???
 
   private enum Access derives CanEqual:
     case Read, Write, ReadWrite, Unknown, Error

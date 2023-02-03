@@ -6,7 +6,6 @@ import compiletime.*
 import scala.quoted.*
 import collection.mutable
 import collection.immutable.ListMap
-import DFOpaque.Abstract as DFOpaqueA
 
 sealed trait Args
 sealed trait NoArgs extends Args
@@ -25,24 +24,15 @@ object DFType:
     case Long      => DFSInt[64]
     case Byte      => DFBits[8]
     case Boolean   => DFBool
-    case DFOpaqueA => DFOpaque[T]
-
-  type FromDFVal[T] <: DFTypeAny = T match
-    case DFValOf[t] => t
 
   def of[T <: Supported](t: T): Of[T] = DFType(t).asInstanceOf[Of[T]]
   private[core] def apply(t: Any): DFTypeAny =
     t match
-      case dfType: DFTypeAny         => dfType
-      case tuple: NonEmptyTuple      => DFTuple(tuple)
-      case tfe: DFOpaque.Frontend[_] => DFOpaque(tfe)
-      case _: Byte.type              => DFBits(8)
-      case _: Boolean.type           => DFBool
-      case _: Int.type               => DFSInt(32)
-      case _: Long.type              => DFSInt(64)
-      // TODO: need to add proper upper-bound if fixed in Scalac
-      // see: https://contributors.scala-lang.org/t/missing-dedicated-class-for-enum-companions
-      case enumCompanion: AnyRef => DFEnum(enumCompanion)
+      case dfType: DFTypeAny => dfType
+      case _: Byte.type      => DFBits(8)
+      case _: Boolean.type   => DFBool
+      case _: Int.type       => DFSInt(32)
+      case _: Long.type      => DFSInt(64)
   private[core] def unapply(t: Any): Option[DFTypeAny] = ???
 
   extension [T <: ir.DFType, A <: Args](dfType: DFType[T, A])
@@ -57,12 +47,11 @@ object DFType:
   export DFBoolOrBit.given
   export DFBits.given
   export DFDecimal.given
-  export DFEnum.given
   export DFVector.given
 
   given [T <: DFTypeAny]: CanEqual[T, T] = CanEqual.derived
 
-  type Supported = DFTypeAny | DFEncoding | DFOpaqueA | Byte | Long | Boolean | AnyRef
+  type Supported = DFTypeAny | Byte | Long | Boolean | AnyRef
 
   trait TC[T]:
     type Type <: DFTypeAny
@@ -97,16 +86,6 @@ object DFType:
       type Type = DFSInt[64]
       def apply(t: Long.type): Type = DFSInt(64)
 
-    transparent inline given ofOpaque[T <: DFTypeAny, TFE <: DFOpaque.Frontend[T]]: TC[TFE] =
-      new TC[TFE]:
-        type Type = DFOpaque[TFE]
-        def apply(t: TFE): Type = DFOpaque(t)
-
-//    transparent inline given ofDFEnum[E <: DFEncoding]: TC[E] =
-//      new TC[E]:
-//        type Type = DFEnum[E]
-//        def apply(t: E): Type = DFEnum(e)
-
     transparent inline given ofProductCompanion[T <: AnyRef]: TC[T] = ${ productMacro[T] }
     def productMacro[T <: AnyRef](using Quotes, Type[T]): Expr[TC[T]] =
       import quotes.reflect.*
@@ -122,26 +101,6 @@ object DFType:
         )
       val clsTpe = compPrefix.select(clsSym)
       clsTpe.asType match
-        case '[t & DFEncoding] =>
-          '{
-            new TC[T]:
-              type Type = DFEnum[t & DFEncoding]
-              def apply(t: T): Type = summonInline[DFEnum[t & DFEncoding]]
-          }
-        case '[t & DFStruct.Fields] =>
-          '{
-            new TC[T]:
-              type Type = DFStruct[t & DFStruct.Fields]
-              def apply(t: T): Type =
-                summonInline[DFStruct[t & DFStruct.Fields]]
-          }
-        case '[t & DFOpaque.Abstract] =>
-          '{
-            new TC[T]:
-              type Type = DFOpaque[t & DFOpaque.Abstract]
-              def apply(t: T): Type =
-                summonInline[DFOpaque[t & DFOpaque.Abstract]]
-          }
         case _ =>
           val badTypeStr = clsTpe.show
           val msg =
@@ -157,43 +116,6 @@ object DFType:
           }
       end match
     end productMacro
-
-    transparent inline given ofTuple[T <: NonEmptyTuple]: TC[T] = ${
-      ofTupleMacro[T]
-    }
-    def ofTupleMacro[T <: NonEmptyTuple](using Quotes, Type[T]): Expr[TC[T]] =
-      import quotes.reflect.*
-      val tTpe = TypeRepr.of[T]
-      val AppliedType(fun, args) = tTpe: @unchecked
-      val tcTrees = args.map(t =>
-        Implicits.search(TypeRepr.of[TC].appliedTo(t)) match
-          case iss: ImplicitSearchSuccess =>
-            iss.tree
-          case isf: ImplicitSearchFailure =>
-            report.errorAndAbort(isf.explanation)
-      )
-      val tcList = '{
-        List(${ Varargs(tcTrees.map(_.asExpr)) }*).asInstanceOf[List[TC[Any]]]
-      }
-      val tpes = tcTrees
-        .map(_.tpe.asTypeOf[Any] match
-          case '[TC[t] { type Type = z }] => TypeRepr.of[z]
-        )
-        .map(t => TypeRepr.of[DFValOf].appliedTo(t))
-      def applyExpr(t: Expr[T]): Expr[List[DFTypeAny]] =
-        '{
-          val tList = $t.toList.asInstanceOf[List[Any]]
-          $tcList.lazyZip(tList).map((tc, t) => tc(t)).toList
-        }
-      val tplTpe = fun.appliedTo(tpes)
-      val tplType = tplTpe.asTypeOf[NonEmptyTuple]
-      '{
-        new TC[T]:
-          type Type = DFTuple[tplType.Underlying]
-          def apply(t: T): Type =
-            DFTuple[tplType.Underlying](${ applyExpr('t) })
-      }
-    end ofTupleMacro
   end TC
 end DFType
 
@@ -204,7 +126,3 @@ extension [T](t: T)(using tc: DFType.TC[T])
 extension [T <: DFTypeAny](token: DFToken[T])
   @targetName("tokenDFType")
   def dfType: T = token.asIR.dfType.asFE[T]
-
-extension [T <: DFTypeAny, M <: ModifierAny](dfVal: DFVal[T, M])
-  @targetName("dfValDFType")
-  def dfType: T = dfVal.asIR.dfType.asFE[T]

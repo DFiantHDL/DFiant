@@ -21,18 +21,10 @@ extension [T](using quotes: Quotes)(tpe: quotes.reflect.TypeRepr)
       case '[DFBits[w]] => s"Bits[${Type.show[w]}]"
       case '[DFUInt[w]] => s"UInt[${Type.show[w]}]"
       case '[DFSInt[w]] => s"SInt[${Type.show[w]}]"
-      case '[DFEnum[t]] => Type.show[t]
       case '[DFVector[t, d]] =>
         s"${TypeRepr.of[t].showDFType} X ${TypeRepr.of[d].showType}"
       case '[DFType[ir.DFVector, Args2[t, d]]] =>
         s"${TypeRepr.of[t].showDFType} X ${TypeRepr.of[d].showType}"
-      case '[DFOpaque[t]] => Type.show[t]
-      case '[DFStruct[t]] =>
-        Type.of[t] match
-          case '[NonEmptyTuple] =>
-            TypeRepr.of[t].showTuple(_.showType).mkStringBrackets
-          case _ =>
-            Type.show[t]
       case _ => "DFType"
     end match
   end showDFType
@@ -43,12 +35,6 @@ extension [T](using quotes: Quotes)(tpe: quotes.reflect.TypeRepr)
       case '[Modifier.VAR] => "VAR"
       case _               => "VAL"
 
-  def showDFVal: String =
-    import quotes.reflect.*
-    tpe.asTypeOf[DFValAny] match
-      case '[DFVal[t, m]] =>
-        s"${TypeRepr.of[t].showDFType} <> ${TypeRepr.of[m].showModifier}"
-
   def showDFToken: String =
     import quotes.reflect.*
     tpe.asTypeOf[DFTokenAny] match
@@ -58,7 +44,6 @@ extension [T](using quotes: Quotes)(tpe: quotes.reflect.TypeRepr)
   def showType: String =
     import quotes.reflect.*
     tpe.asTypeOf[Any] match
-      case '[DFValAny]   => tpe.showDFVal
       case '[DFTokenAny] => tpe.showDFToken
       case '[DFTypeAny]  => tpe.showDFType
       case '[Tuple] =>

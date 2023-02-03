@@ -1,6 +1,5 @@
 package dfhdl.core
 import dfhdl.compiler.ir
-import ir.DFVal.Func.Op as FuncOp
 import dfhdl.internals.*
 
 import scala.annotation.{implicitNotFound, targetName}

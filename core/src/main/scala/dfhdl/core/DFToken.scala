@@ -1,6 +1,5 @@
 package dfhdl.core
 import dfhdl.compiler.ir
-import ir.DFVal.Func.Op as FuncOp
 import dfhdl.internals.*
 
 import scala.quoted.*
@@ -17,39 +16,6 @@ type DFTokenAny = DFToken[DFTypeAny]
 extension (tokenIR: ir.DFTokenAny) def asTokenOf[T <: DFTypeAny]: DFToken[T] = DFToken[T](tokenIR)
 
 object DFToken:
-  trait Refiner[T <: FieldsOrTuple]:
-    type Out <: DFToken[DFStruct[T]]
-  object Refiner:
-    transparent inline given [T <: FieldsOrTuple]: Refiner[T] = ${
-      refineMacro[T]
-    }
-    def refineMacro[T <: FieldsOrTuple](using
-        Quotes,
-        Type[T]
-    ): Expr[Refiner[T]] =
-      import quotes.reflect.*
-      val tokenTpe = TypeRepr.of[DFToken[DFStruct[T]]]
-      val tTpe = TypeRepr.of[T]
-      val fields: List[(String, TypeRepr)] = tTpe.asTypeOf[Any] match
-        case '[NonEmptyTuple] =>
-          tTpe.getTupleArgs.zipWithIndex.map((f, i) =>
-            f.asTypeOf[Any] match
-              case '[DFValOf[t]] =>
-                (s"_${i + 1}", TypeRepr.of[DFToken[t]])
-          )
-        case _ => ???
-
-      val refined = fields.foldLeft(tokenTpe) { case (r, (n, t)) =>
-        Refinement(r, n, t)
-      }
-      val refinedType = refined.asTypeOf[DFToken[DFStruct[T]]]
-      '{
-        new Refiner[T]:
-          type Out = refinedType.Underlying
-      }
-    end refineMacro
-  end Refiner
-
   // implicit conversion to allow a boolean/bit token to be a Scala Boolean
   implicit def fromDFBoolOrBitToken(from: DFToken[DFBoolOrBit]): Boolean =
     from.asIR.data.asInstanceOf[ir.DFBool.Data].get

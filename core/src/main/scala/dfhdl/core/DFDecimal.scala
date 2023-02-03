@@ -1,7 +1,6 @@
 package dfhdl.core
 import dfhdl.compiler.ir
 import dfhdl.internals.*
-import ir.DFVal.Func.{Op => FuncOp}
 
 import scala.quoted.*
 import scala.annotation.targetName
