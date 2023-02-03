@@ -1,16 +1,17 @@
 package dfhdl.core
 import dfhdl.compiler.ir
 
+final class DFError extends Exception("") derives CanEqual
+
 final class DFType[+T <: ir.DFType](val value: T | DFError) extends AnyVal:
   override def toString: String = value.toString
 type DFTypeAny = DFType[ir.DFType]
 
 object DFType:
-
   extension [T <: ir.DFType](dfType: DFType[T])
     def asIR: T = dfType.value match
       case dfTypeIR: T @unchecked => dfTypeIR
-      case err: DFError           => throw DFError("")
+      case err: DFError           => throw new DFError
   extension (dfType: ir.DFType) def asFE[T <: DFTypeAny]: T = new DFType(dfType).asInstanceOf[T]
   export DFBoolOrBit.given
 
