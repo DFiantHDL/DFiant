@@ -572,16 +572,6 @@ object DFVal:
         DFVal.Const(arg)
     end sameValAndTokenType
   end CompareLP
-  object Compare extends CompareLP:
-    export DFBoolOrBit.Val.Compare.given
-    export DFBits.Val.Compare.given
-    export DFDecimal.Val.Compare.given
-  end Compare
-
-//  object Conversions:
-//    implicit transparent inline def fromArg[T <: DFTypeAny, R](
-//        inline arg: R
-//    ): DFValOf[T] = ${ fromArgMacro[T]('arg) }
 
   trait DFDomainOnly
   given (using domain: DFC.Domain)(using

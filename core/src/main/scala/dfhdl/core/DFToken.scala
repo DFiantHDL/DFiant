@@ -199,10 +199,6 @@ object DFToken:
       def conv(dfType: T, arg: V): DFToken[T] = arg
   end CompareLPLP
   trait CompareLP extends CompareLPLP
-  object Compare extends CompareLP:
-    export DFBoolOrBit.Token.Compare.given
-    export DFBits.Token.Compare.given
-    export DFDecimal.Token.Compare.given
 
   trait Value[T <: DFTypeAny]:
     type Out <: DFTokenAny
