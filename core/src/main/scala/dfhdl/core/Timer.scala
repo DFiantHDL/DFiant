@@ -13,44 +13,10 @@ object Timer:
       case t: Time => t
       case f: Freq => f.period
 
-  def apply()(using DFC): Timer = Periodic(None, None)
-  def apply(period: Period)(using DFC): Timer = Periodic(None, Some(period.time))
-  def apply(trigger: DFValOf[DFBit])(using DFC): Timer = Periodic(Some(trigger), None)
-  def apply(trigger: DFValOf[DFBit], period: Period)(using DFC): Timer =
-    Periodic(Some(trigger), Some(period.time))
   extension (bd: BigDecimal.type)
     private def apply(arg: Int | Double): BigDecimal = arg match
       case i: Int    => BigDecimal(i)
       case d: Double => BigDecimal(d)
-//  trait Literal[T]:
-//    def apply(arg: T): BigDecimal
-//  object Literal:
-//    given fromInt[T <: Int]: Literal[T] with
-//      def apply(arg: T): BigDecimal = BigDecimal(arg)
-//    given fromDouble[T <: Double]: Literal[T] with
-//      def apply(arg: T): BigDecimal = BigDecimal(arg)
-  object Ops:
-    extension (timer: Timer)
-      def *(ratio: Int | Double)(using DFC): Timer =
-        Timer.Func(timer, FuncOp.`*`, Ratio(BigDecimal(ratio)))
-      def /(ratio: Int | Double)(using DFC): Timer =
-        Timer.Func(timer, FuncOp./, Ratio(BigDecimal(ratio)))
-      def delay(arg: Time)(using DFC): Timer =
-        Timer.Func(timer, FuncOp.Delay, arg)
-      def isActive(using DFC): DFValOf[DFBool] =
-        Timer.IsActive(timer)
-    extension (lhs: Int | Double)
-      def ps: Time = Time(BigDecimal(lhs) * 1e6)
-      def ns: Time = Time(BigDecimal(lhs) * 1e3)
-      def us: Time = Time(BigDecimal(lhs))
-      def ms: Time = Time(BigDecimal(lhs) / 1e3)
-      def sec: Time = Time(BigDecimal(lhs) / 1e6)
-    extension (lhs: Int | Double)
-      def Hz: Freq = Freq(BigDecimal(lhs))
-      def KHz: Freq = Freq(BigDecimal(lhs) * 1e3)
-      def MHz: Freq = Freq(BigDecimal(lhs) * 1e6)
-      def GHz: Freq = Freq(BigDecimal(lhs) * 1e9)
-  end Ops
 
   object Periodic:
     def apply(trigger: Option[DFValOf[DFBit]], periodOpt: Option[Time])(using DFC): Timer =
