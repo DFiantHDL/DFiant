@@ -15,6 +15,6 @@ extension [T <: ir.DFType](dfType: DFType[T])
 object Timer
 
 type DFBit = DFType[ir.DFBit.type]
-final lazy val DFBit = new DFType(ir.DFBit).asInstanceOf[DFBit]
+final lazy val DFBit = new DFType[ir.DFBit.type](ir.DFBit)
 
 extension [T](t: T) def width: Unit = DFBit.asIR
