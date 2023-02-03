@@ -577,7 +577,6 @@ object DFVal:
     export DFBits.Val.Compare.given
     export DFDecimal.Val.Compare.given
     export DFEnum.Val.Compare.given
-    export DFVector.Val.Compare.given
     export DFTuple.Val.Compare.given
     export DFStruct.Val.Compare.given
   end Compare
