@@ -32,7 +32,6 @@ object DFError:
   final class Derived(from: DFError) extends DFError(from.dfMsg)
 
   extension (dfErr: DFError)
-    def asNet: DFNet = new DFNet(dfErr)
     def asFE[T <: DFTypeAny]: T = DFType(dfErr).asInstanceOf[T]
     def asValOf[T <: DFTypeAny]: DFValOf[T] = new DFVal[T, ModifierAny](dfErr)
     def asVal[T <: DFTypeAny, M <: ModifierAny]: DFVal[T, M] = new DFVal[T, M](dfErr)
