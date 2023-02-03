@@ -59,17 +59,6 @@ object Width:
               ConstantType(IntConstant(1))
             case '[DFBits[w]] =>
               TypeRepr.of[w].calcWidth
-            case '[DFVector[t, d]] =>
-              val cellWidth = TypeRepr.of[t].calcWidth
-              val cellDims = TypeRepr.of[d].getTupleArgs
-              val widths = cellWidth :: cellDims
-              widths.reduce(_ * _)
-            // TODO: figure out why this is needed and DFVector case is not taken
-            case '[DFType[ir.DFVector, Args2[t, d]]] =>
-              val cellWidth = TypeRepr.of[t].calcWidth
-              val cellDims = TypeRepr.of[d].getTupleArgs
-              val widths = cellWidth :: cellDims
-              widths.reduce(_ * _)
             case _ =>
               TypeRepr.of[Int]
           end match

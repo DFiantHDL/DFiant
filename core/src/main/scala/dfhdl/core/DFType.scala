@@ -41,7 +41,6 @@ object DFType:
   ): DFTypeAny = tc(t)
   export DFBoolOrBit.given
   export DFBits.given
-  export DFVector.given
 
   given [T <: DFTypeAny]: CanEqual[T, T] = CanEqual.derived
 

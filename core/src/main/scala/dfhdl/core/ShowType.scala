@@ -19,11 +19,7 @@ extension [T](using quotes: Quotes)(tpe: quotes.reflect.TypeRepr)
       case '[DFBit]     => "Bit"
       case '[DFBool]    => "Boolean"
       case '[DFBits[w]] => s"Bits[${Type.show[w]}]"
-      case '[DFVector[t, d]] =>
-        s"${TypeRepr.of[t].showDFType} X ${TypeRepr.of[d].showType}"
-      case '[DFType[ir.DFVector, Args2[t, d]]] =>
-        s"${TypeRepr.of[t].showDFType} X ${TypeRepr.of[d].showType}"
-      case _ => "DFType"
+      case _            => "DFType"
     end match
   end showDFType
 
