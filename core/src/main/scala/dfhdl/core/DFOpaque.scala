@@ -16,31 +16,22 @@ object DFOpaque:
   abstract class Frontend[T <: DFTypeAny](final protected[core] val actualType: T) extends Abstract:
     type ActualType = T
 
-  abstract class Frontend2[T <: DFTypeAny](final protected[core] val actualType: T)(arg: Int)
-      extends Abstract:
-    type ActualType = T
-
   given [T <: Abstract](using ce: ClassEv[T]): DFOpaque[T] = DFOpaque(ce.value)
 
   def apply[T <: Abstract](
       t: T
-  ): DFOpaque[T] =
-    ir.DFOpaque(t.typeName, t, t.actualType.asIR).asFE[DFOpaque[T]]
-  extension [T <: DFTypeAny, TFE <: Frontend[T]](dfType: DFOpaque[TFE])
-    def actualType: T = dfType.asIR.actualType.asFE[T]
+  ): DFOpaque[T] = ???
 
   type Token[T <: Abstract] = DFToken[DFOpaque[T]]
   object Token:
     def apply[T <: DFTypeAny, TFE <: Frontend[T]](
         tfe: TFE,
         token: T <> TOKEN
-    ): Token[TFE] =
-      ir.DFToken(DFOpaque(tfe).asIR)(token.asIR.data).asTokenOf[DFOpaque[TFE]]
+    ): Token[TFE] = ???
     def forced[TFE <: Abstract](
         tfe: TFE,
         token: DFTokenAny
-    ): Token[TFE] =
-      ir.DFToken(DFOpaque(tfe).asIR)(token.asIR.data).asTokenOf[DFOpaque[TFE]]
+    ): Token[TFE] = ???
 
     object TC:
       import DFToken.TC
@@ -49,8 +40,7 @@ object DFOpaque:
           RT <: Abstract,
           V <: DFOpaque[RT] <> TOKEN
       ](using dfc: DFC, st: RT <:< T): TC[DFOpaque[T], V] with
-        def conv(dfType: DFOpaque[T], value: V): Out =
-          value.asIR.asTokenOf[DFOpaque[T]]
+        def conv(dfType: DFOpaque[T], value: V): Out = ???
   end Token
 
   object Val:
@@ -61,8 +51,7 @@ object DFOpaque:
           RT <: Abstract,
           V <: DFOpaque[RT] <> VAL
       ](using dfc: DFC, st: RT <:< T): TC[DFOpaque[T], V] with
-        def conv(dfType: DFOpaque[T], value: V): Out =
-          value.asIR.asValOf[DFOpaque[T]]
+        def conv(dfType: DFOpaque[T], value: V): Out = ???
   end Val
 
 end DFOpaque
