@@ -872,10 +872,7 @@ object DFXInt:
         type OutS = false
         type OutW = W
         type IsScalaInt = false
-        def apply(arg: R)(using dfc: DFC): DFValOf[DFXInt[false, W]] =
-          import DFBits.Val.Ops.uint
-          given DFC = dfc.anonymize
-          arg.uint
+        def apply(arg: R)(using dfc: DFC): DFValOf[DFXInt[false, W]] = ???
       inline given errDFEncoding[E <: DFEncoding]: Candidate[E] =
         compiletime.error(
           "Cannot apply an enum entry value to a dataflow decimal variable."

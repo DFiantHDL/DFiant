@@ -165,15 +165,7 @@ object DFBoolOrBit:
     private def b2b[T <: DFBoolOrBit, R](dfType: T, arg: R)(using
         ic: Candidate[R],
         dfc: DFC
-    ): T <> VAL =
-      val dfcAnon = dfc.anonymize
-      import Ops.{bit, bool}
-      val dfValArg = ic(arg)(using dfcAnon)
-      val dfValOut = (dfType, dfValArg.dfType) match
-        case (DFBit, DFBool) => dfValArg.asIR.asValOf[DFBool].bit(using dfcAnon)
-        case (DFBool, DFBit) => dfValArg.asIR.asValOf[DFBit].bool(using dfcAnon)
-        case _               => dfValArg
-      dfValOut.asIR.asValOf[T]
+    ): T <> VAL = ???
 
     object TC:
       import DFVal.TC
@@ -195,70 +187,6 @@ object DFBoolOrBit:
         def conv(dfType: T, arg: R): T <> VAL =
           b2b(dfType, arg)
 
-    object Ops:
-      extension (lhs: DFBit <> VAL)
-        def rising(using DFC): DFBool <> VAL = trydf {
-          DFVal.Func(DFBool, FuncOp.rising, List(lhs))
-        }
-        def falling(using DFC): DFBool <> VAL = trydf {
-          DFVal.Func(DFBool, FuncOp.falling, List(lhs))
-        }
-        def bool(using DFC): DFBool <> VAL = trydf {
-          import Token.Ops.{bool => boolToken}
-          DFVal.Alias.AsIs(DFBool, lhs, _.boolToken)
-        }
-        @targetName("notOfDFBit")
-        def unary_!(using DFC): DFBit <> VAL = trydf {
-          DFVal.Func(DFBit, FuncOp.unary_!, List(lhs))
-        }
-      end extension
-      extension (lhs: DFBool <> VAL)
-        def bit(using DFC): DFBit <> VAL = trydf {
-          import Token.Ops.{bit => bitToken}
-          DFVal.Alias.AsIs(DFBit, lhs, _.bitToken)
-        }
-        @targetName("notOfDFBool")
-        def unary_!(using DFC): DFBool <> VAL = trydf {
-          DFVal.Func(DFBool, FuncOp.unary_!, List(lhs))
-        }
-
-      private def logicOp[T <: DFBoolOrBit, R](
-          dfVal: T <> VAL,
-          arg: R,
-          op: FuncOp,
-          castle: Boolean
-      )(using dfc: DFC, ic: Candidate[R]): T <> VAL =
-        val dfValArg = b2b(dfVal.dfType, arg)
-        val (lhs, rhs) = if (castle) (dfValArg, dfVal) else (dfVal, dfValArg)
-        DFVal.Func(lhs.dfType.asIR.asFE[T], op, List(lhs, rhs))
-      extension [T <: DFBoolOrBit](lhs: T <> VAL)
-        def ||[R](rhs: Exact[R])(using dfc: DFC, ic: Candidate[R]): T <> VAL =
-          trydf { logicOp[T, R](lhs, rhs, FuncOp.|, false) }
-        def &&[R](rhs: Exact[R])(using dfc: DFC, ic: Candidate[R]): T <> VAL =
-          trydf { logicOp[T, R](lhs, rhs, FuncOp.&, false) }
-        def ^[R](rhs: Exact[R])(using dfc: DFC, ic: Candidate[R]): T <> VAL =
-          trydf { logicOp[T, R](lhs, rhs, FuncOp.^, false) }
-      extension [L](lhs: L)
-        def ||[RT <: DFBoolOrBit](
-            rhs: RT <> VAL
-        )(using es: Exact.Summon[L, lhs.type])(using
-            dfc: DFC,
-            ic: Candidate[es.Out]
-        ): RT <> VAL = trydf { logicOp(rhs, ic(es(lhs)), FuncOp.|, true) }
-        def &&[RT <: DFBoolOrBit](
-            rhs: RT <> VAL
-        )(using es: Exact.Summon[L, lhs.type])(using
-            dfc: DFC,
-            ic: Candidate[es.Out]
-        ): RT <> VAL = trydf { logicOp(rhs, ic(es(lhs)), FuncOp.&, true) }
-        def ^[RT <: DFBoolOrBit](
-            rhs: RT <> VAL
-        )(using es: Exact.Summon[L, lhs.type])(using
-            dfc: DFC,
-            ic: Candidate[es.Out]
-        ): RT <> VAL = trydf { logicOp(rhs, ic(es(lhs)), FuncOp.^, true) }
-      end extension
-    end Ops
   end Val
 end DFBoolOrBit
 
