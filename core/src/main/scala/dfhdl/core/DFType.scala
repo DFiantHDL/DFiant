@@ -13,13 +13,13 @@ sealed trait Args1[T1] extends Args
 sealed trait Args2[T1, T2] extends Args
 sealed trait Args3[T1, T2, T3] extends Args
 
-final class DFType[+T <: ir.DFType, +A <: Args](val value: T | DFError) extends AnyVal:
+final class DFType[+T <: ir.DFType](val value: T | DFError) extends AnyVal:
   override def toString: String = value.toString
-type DFTypeAny = DFType[ir.DFType, Args]
+type DFTypeAny = DFType[ir.DFType]
 
 object DFType:
 
-  extension [T <: ir.DFType, A <: Args](dfType: DFType[T, A])
+  extension [T <: ir.DFType](dfType: DFType[T])
     def asIR: T = dfType.value match
       case dfTypeIR: T @unchecked => dfTypeIR
       case err: DFError           => throw DFError.Derived(err)
