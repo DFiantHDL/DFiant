@@ -25,9 +25,5 @@ object DFBits:
       Arg.Width.Check[W]
   ): DFBits[W] = DFBits[W](Inlined.forced[W](valueOf[W]))
 
-  type Token[W <: Int] = CompanionsDFBits.Token[W]
-end DFBits
-
-private object CompanionsDFBits:
   type Token[W <: Int] = DFToken[DFBits[W]]
-end CompanionsDFBits
+end DFBits
