@@ -1,5 +1,4 @@
 package dfhdl.core
-import dfhdl.compiler.ir
 
 final class DFError extends Exception("") derives CanEqual
 
