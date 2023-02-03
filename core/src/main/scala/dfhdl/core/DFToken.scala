@@ -203,7 +203,6 @@ object DFToken:
     export DFBoolOrBit.Token.Compare.given
     export DFBits.Token.Compare.given
     export DFDecimal.Token.Compare.given
-    export DFEnum.Token.Compare.given
     export DFTuple.Token.Compare.given
 
   trait Value[T <: DFTypeAny]:
