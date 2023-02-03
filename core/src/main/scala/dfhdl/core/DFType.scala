@@ -27,12 +27,6 @@ object DFType:
     case Byte      => DFBits[8]
     case Boolean   => DFBool
     case DFOpaqueA => DFOpaque[T]
-    case Product   => FromProduct[T]
-
-  type FromProduct[T <: Product] <: DFTypeAny = T match
-    case DFEncoding      => DFEnum[T]
-    case NonEmptyTuple   => DFTuple[Tuple.Map[T, JUSTVAL]]
-    case DFStruct.Fields => DFStruct[T]
 
   type FromDFVal[T] <: DFTypeAny = T match
     case DFValOf[t] => t

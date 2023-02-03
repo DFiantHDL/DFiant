@@ -21,15 +21,5 @@ object DFOpaque:
   ): DFOpaque[T] = ???
 
   type Token[T <: Abstract] = DFToken[DFOpaque[T]]
-  object Token:
-    def apply[T <: DFTypeAny, TFE <: Frontend[T]](
-        tfe: TFE,
-        token: T <> TOKEN
-    ): Token[TFE] = ???
-    def forced[TFE <: Abstract](
-        tfe: TFE,
-        token: DFTokenAny
-    ): Token[TFE] = ???
-  end Token
 
 end DFOpaque

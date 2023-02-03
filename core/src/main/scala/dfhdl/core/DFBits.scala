@@ -30,59 +30,6 @@ object DFBits:
 end DFBits
 
 private object CompanionsDFBits:
-  protected object `AW == TW`
-      extends Check2[
-        Int,
-        Int,
-        [AW <: Int, TW <: Int] =>> AW == TW,
-        [AW <: Int, TW <: Int] =>> "The alias width (" + AW +
-          ") is different than the dataflow value width (" + TW + ")."
-      ]
-  protected object `LW >= RW`
-      extends Check2[
-        Int,
-        Int,
-        [LW <: Int, RW <: Int] =>> LW >= RW,
-        [LW <: Int, RW <: Int] =>> "The new width (" + RW +
-          ") is larger than the original width (" + LW + ")."
-      ]
-  protected[core] object BitIndex
-      extends Check2[
-        Int,
-        Int,
-        [I <: Int, W <: Int] =>> (I < W) && (I >= 0),
-        [I <: Int, W <: Int] =>> "Index " + I + " is out of range of width/length " + W
-      ]
-  protected object BitsHiLo
-      extends Check2[
-        Int,
-        Int,
-        [H <: Int, L <: Int] =>> H >= L,
-        [H <: Int, L <: Int] =>> "Low index " + L + " is bigger than High bit index " + H
-      ]
-  trait CompareCheck[
-      ValW <: Int,
-      ArgW <: Int,
-      Castle <: Boolean // castling of dfVal and arg
-  ]:
-    def apply(dfValWidth: Int, argWidth: Int): Unit
-  given [
-      ValW <: Int,
-      ArgW <: Int,
-      Castle <: Boolean
-  ](using
-      lw: Id[ITE[Castle, ArgW, ValW]],
-      rw: Id[ITE[Castle, ValW, ArgW]]
-  )(using
-      checkW: `LW == RW`.Check[lw.Out, rw.Out],
-      castle: ValueOf[Castle]
-  ): CompareCheck[ValW, ArgW, Castle] with
-    def apply(dfValWidth: Int, argWidth: Int): Unit =
-      val lw = if (castle) argWidth else dfValWidth
-      val rw = if (castle) dfValWidth else argWidth
-      checkW(lw, rw)
-  end given
-
   type Token[W <: Int] = DFToken[DFBits[W]]
   object Token:
     protected[core] def apply[W <: Int](

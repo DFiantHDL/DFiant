@@ -11,20 +11,6 @@ import scala.annotation.unchecked.uncheckedVariance
 final class DFToken[+T <: DFTypeAny](val value: ir.DFTokenAny | DFError)
     extends AnyVal
     with Selectable:
-
-  def selectDynamic(name: String): Any =
-    val ir.DFStruct(structName, fieldMap) = this.asIR.dfType: @unchecked
-    val dfType = fieldMap(name)
-    val idx = fieldMap.toList.indexWhere(_._1 == name)
-    val data = this.asIR.data.asInstanceOf[List[Any]](idx)
-    ir.DFToken.forced(dfType, data).asTokenOf[DFTypeAny]
-
-  transparent inline def ==[R](
-      inline that: R
-  )(using DFC): DFBool <> TOKEN = ???
-  transparent inline def !=[R](
-      inline that: R
-  )(using DFC): DFBool <> TOKEN = ???
   override def toString: String = value.toString
 end DFToken
 

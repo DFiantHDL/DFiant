@@ -16,13 +16,6 @@ class DFVal[+T <: DFTypeAny, +M <: ModifierAny](val irValue: ir.DFVal | DFError)
     extends // AnyVal with
     DFMember[ir.DFVal]
     with Selectable:
-
-  transparent inline def ==[R](
-      inline that: R
-  )(using DFC): DFBool <> VAL = ???
-  transparent inline def !=[R](
-      inline that: R
-  )(using DFC): DFBool <> VAL = ???
 end DFVal
 
 type DFValAny = DFVal[DFTypeAny, ModifierAny]
@@ -32,18 +25,6 @@ type DFVarOf[+T <: DFTypeAny] = DFVal[T, Modifier[Modifier.Assignable, Any, Any]
 type DFPortOf[+T <: DFTypeAny] = DFVal[T, Modifier.Port]
 
 sealed trait TOKEN
-type <>[T <: DFType.Supported | Int, M] = T match
-  case DFType.Supported =>
-    M match
-      case VAL   => DFValOf[DFType.Of[T]]
-      case TOKEN => DFToken[DFType.Of[T]]
-  // Int is also special cased by the compiler plugin
-  case Int => DFVector.ComposedModifier[T, M]
-
-type X[T <: DFType.Supported, M] = M match
-  case DFVector.ComposedModifier[d, m] => <>[DFVector[DFType.Of[T], Tuple1[d]], m]
-  case Int                             => DFVector[DFType.Of[T], Tuple1[M]]
-type JUSTVAL[T <: DFType.Supported] = <>[T, VAL]
 
 extension (dfVal: ir.DFVal)
   inline def asVal[T <: DFTypeAny, M <: ModifierAny]: DFVal[T, M] =
