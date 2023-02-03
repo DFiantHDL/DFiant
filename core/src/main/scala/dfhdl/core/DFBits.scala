@@ -120,51 +120,5 @@ private object CompanionsDFBits:
     extension [W <: Int](token: DFBits.Token[W])
       def valueBits: BitVector = token.data._1
       def bubbleBits: BitVector = token.data._2
-
-    @implicitNotFound(
-      "Argument of type ${R} is not a proper candidate for a Bits token."
-    )
-    trait Candidate[R]:
-      type OutW <: Int
-      def apply(arg: R): Token[OutW]
-    protected trait CandidateLP:
-      protected inline val intErrMsg =
-        "An integer value cannot be a candidate for a Bits type.\nTry explicitly using a decimal token via the `d\"<width>'<number>\"` string interpolation."
-      inline given errorOnInt[V <: Int]: Candidate[V] =
-        compiletime.error(intErrMsg)
-    object Candidate extends CandidateLP:
-      type Aux[R, W <: Int] = Candidate[R] { type OutW = W }
-      transparent inline given fromDFBitsToken[W <: Int, R <: Token[W]]: Candidate[R] =
-        new Candidate[R]:
-          type OutW = W
-          def apply(arg: R): Token[OutW] = arg
-      transparent inline given fromDFUIntToken[W <: Int, R <: DFUInt.Token[W]]: Candidate[R] =
-        new Candidate[R]:
-          type OutW = W
-          def apply(arg: R): Token[OutW] = ???
-      transparent inline given fromDFBitCandidate[R, T <: DFBoolOrBit](using
-          ic: DFBoolOrBit.Token.Candidate.Aux[R, T]
-      )(using T =:= DFBit): Candidate[R] = ???
-      private def valueToBits(value: Any): DFBits[Int] <> TOKEN = ???
-      transparent inline given fromTuple[R <: NonEmptyTuple, V <: NonEmptyTuple]: Candidate[V] = ${
-        DFBitsMacro[V]
-      }
-      def DFBitsMacro[V](using
-          Quotes,
-          Type[V]
-      ): Expr[Candidate[V]] =
-        import quotes.reflect.*
-        import Width.*
-        val rTpe = TypeRepr.of[V]
-        val wType = rTpe.calcValWidth(true).asTypeOf[Int]
-        '{
-          new Candidate[V]:
-            type OutW = wType.Underlying
-            def apply(value: V): DFToken[DFBits[OutW]] =
-              valueToBits(value).asIR.asTokenOf[DFBits[OutW]]
-        }
-      end DFBitsMacro
-    end Candidate
-
   end Token
 end CompanionsDFBits
