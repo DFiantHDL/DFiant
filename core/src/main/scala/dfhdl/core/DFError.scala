@@ -1,12 +1,6 @@
 package dfhdl.core
 
-sealed abstract class DFError(
+final class DFError(
     val dfMsg: String
 ) extends Exception(dfMsg)
     derives CanEqual
-
-object DFError:
-  final class Derived(from: DFError) extends DFError(from.dfMsg)
-
-  extension (dfErr: DFError) def asFE[T <: DFTypeAny]: T = DFType(dfErr).asInstanceOf[T]
-end DFError

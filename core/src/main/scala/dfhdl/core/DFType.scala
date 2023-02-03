@@ -10,7 +10,7 @@ object DFType:
   extension [T <: ir.DFType](dfType: DFType[T])
     def asIR: T = dfType.value match
       case dfTypeIR: T @unchecked => dfTypeIR
-      case err: DFError           => throw DFError.Derived(err)
+      case err: DFError           => throw DFError("")
   extension (dfType: ir.DFType) def asFE[T <: DFTypeAny]: T = new DFType(dfType).asInstanceOf[T]
   export DFBoolOrBit.given
 
