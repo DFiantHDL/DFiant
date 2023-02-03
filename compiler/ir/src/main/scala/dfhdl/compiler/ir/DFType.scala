@@ -20,8 +20,7 @@ object DFType:
     type Token = DFToken[T]
     object Token:
       type Data = D
-      def apply(dfType: T, data: D): DFToken[T] =
-        DFToken.forced(dfType, data)
+      def apply(dfType: T, data: D): DFToken[T] = ???
       def unapply(token: DFTokenAny): Option[(T, D)] =
         token.dfType match
           case dt: T =>

@@ -64,8 +64,7 @@ object DFToken:
   given [T <: DFTypeAny]: CanEqual[Tuple, DFToken[T]] =
     CanEqual.derived
 
-  protected[core] def bubble[T <: DFTypeAny](dfType: T): DFToken[T] =
-    ir.DFToken.bubble(dfType.asIR).asTokenOf[T]
+  protected[core] def bubble[T <: DFTypeAny](dfType: T): DFToken[T] = ???
   extension (token: DFTokenAny)
     def asIR: ir.DFTokenAny = token.value match
       case tokenIR: ir.DFTokenAny => tokenIR
