@@ -95,19 +95,6 @@ object DFBoolOrBit:
         tokenArg: DFToken[DFBoolOrBit],
         op: FuncOp
     ): DFToken[T] = logicOp[T, T](token.dfType, token, tokenArg, op)
-
-    object Compare:
-      import DFToken.Compare
-      given DFBoolOrBitCompare[T <: DFBoolOrBit, R, Op <: FuncOp, C <: Boolean](using
-          ic: Candidate[R],
-          op: ValueOf[Op],
-          castle: ValueOf[C]
-      ): Compare[T, R, Op, C] with
-        def conv(dfType: T, arg: R): DFToken[T] =
-          val tokenArg = ic(arg)
-          Token(dfType, tokenArg.data)
-    end Compare
-
   end Token
 
   object Val:
@@ -141,18 +128,6 @@ object DFBoolOrBit:
       ): TC[T, R] with
         def conv(dfType: T, arg: R): Out = b2b(dfType, arg)
     end TC
-
-    object Compare:
-      import DFVal.Compare
-      given DFBoolOrBitCompare[T <: DFBoolOrBit, R, Op <: FuncOp, C <: Boolean](using
-          DFC,
-          Candidate[R],
-          ValueOf[Op],
-          ValueOf[C]
-      ): Compare[T, R, Op, C] with
-        def conv(dfType: T, arg: R): T <> VAL =
-          b2b(dfType, arg)
-
   end Val
 end DFBoolOrBit
 

@@ -441,32 +441,6 @@ private object CompanionsDFBits:
         end if
       end unapplySeqMacro
     end StrInterp
-
-    object Compare:
-      import DFToken.Compare
-      given [LW <: Int, R, Op <: FuncOp, C <: Boolean](using
-          ic: Candidate[R]
-      )(using
-          check: CompareCheck[LW, ic.OutW, C],
-          op: ValueOf[Op],
-          castling: ValueOf[C]
-      ): Compare[DFBits[LW], R, Op, C] with
-        def conv(dfType: DFBits[LW], arg: R): DFBits[LW] <> TOKEN =
-          val tokenArg = ic(arg)
-          check(
-            dfType.width,
-            tokenArg.dfType.width
-          )
-          tokenArg.asIR.asTokenOf[DFBits[LW]]
-      end given
-      given [LW <: Int, Op <: FuncOp, C <: Boolean, T <: BitOrBool, V <: SameElementsVector[T]](
-          using
-          op: ValueOf[Op],
-          castling: ValueOf[C]
-      ): Compare[DFBits[LW], V, Op, C] with
-        def conv(dfType: DFBits[LW], arg: V): DFBits[LW] <> TOKEN =
-          Token(dfType.width, arg)
-    end Compare
   end Token
 
   object Val:
@@ -550,36 +524,5 @@ private object CompanionsDFBits:
         def conv(dfType: DFBits[LW], value: V): DFValOf[DFBits[LW]] =
           DFVal.Const(Token(dfType.width, value))
     end TC
-
-    object Compare:
-      import DFVal.Compare
-      given DFBitsCompareCandidate[LW <: Int, R, Op <: FuncOp, C <: Boolean](using
-          ic: Candidate[R]
-      )(using
-          dfc: DFC,
-          check: CompareCheck[LW, ic.OutW, C],
-          op: ValueOf[Op],
-          castling: ValueOf[C]
-      ): Compare[DFBits[LW], R, Op, C] with
-        def conv(dfType: DFBits[LW], arg: R): DFBits[LW] <> VAL =
-          val dfValArg = ic(arg)(using dfc.anonymize)
-          check(dfType.width, dfValArg.dfType.width)
-          dfValArg.asIR.asValOf[DFBits[LW]]
-      given DFBitsCompareSEV[
-          LW <: Int,
-          Op <: FuncOp,
-          C <: Boolean,
-          T <: BitOrBool,
-          V <: SameElementsVector[T]
-      ](using
-          DFC,
-          ValueOf[Op],
-          ValueOf[C]
-      ): Compare[DFBits[LW], V, Op, C] with
-        def conv(dfType: DFBits[LW], arg: V): DFBits[LW] <> VAL =
-          DFVal.Const(Token(dfType.width, arg))
-      end DFBitsCompareSEV
-    end Compare
-
   end Val
 end CompanionsDFBits

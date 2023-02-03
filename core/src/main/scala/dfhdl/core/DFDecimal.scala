@@ -332,9 +332,6 @@ object DFDecimal:
     object TC:
       export DFXInt.Token.TC.given
 
-    object Compare:
-      export DFXInt.Token.Compare.given
-
     object StrInterp:
       class DParts[P <: Tuple](parts: P):
         transparent inline def apply(inline args: Any*): Any =
@@ -459,8 +456,6 @@ object DFDecimal:
         `LS >= RS`(dfType.signed, dfVal.dfType.signed)
         dfVal
     end TC
-    object Compare:
-      export DFXInt.Val.Compare.given
   end Val
 end DFDecimal
 
@@ -519,50 +514,6 @@ object DFXInt:
         def conv(dfType: DFXInt[LS, LW], value: R): Out = ???
       end given
     end TC
-
-    object Compare:
-      import DFToken.Compare
-      given [LS <: Boolean, LW <: Int, R, Op <: FuncOp, C <: Boolean](using
-          ic: Candidate[R]
-      )(using
-          check: CompareCheck[LS, LW, ic.OutS, ic.OutW, ic.IsScalaInt, C],
-          op: ValueOf[Op],
-          castling: ValueOf[C]
-      ): Compare[DFXInt[LS, LW], R, Op, C] with
-        override def apply(token: Token[LS, LW], arg: R)(using
-            op: ValueOf[Op],
-            castling: ValueOf[C]
-        ): DFBool <> TOKEN =
-          val tokenArg = conv(token.dfType, arg)
-          val (lhsData, rhsData) =
-            if (castling) (tokenArg.data, token.data)
-            else (token.data, tokenArg.data)
-          val outData = (lhsData, rhsData) match
-            case (Some(l), Some(r)) =>
-              import DFVal.Func.Op
-              op.value match
-                case Op.=== => Some(l == r)
-                case Op.=!= => Some(l != r)
-                case Op.<   => Some(l < r)
-                case Op.>   => Some(l > r)
-                case Op.<=  => Some(l <= r)
-                case Op.>=  => Some(l >= r)
-                case _      => throw new IllegalArgumentException("Unsupported Op")
-            case _ => None
-          DFBoolOrBit.Token(DFBool, outData)
-        end apply
-        def conv(dfType: DFXInt[LS, LW], arg: R): DFXInt[LS, LW] <> TOKEN =
-          val tokenArg = ic(arg)
-          check(
-            dfType.signed,
-            dfType.width,
-            tokenArg.dfType.signed,
-            tokenArg.dfType.width
-          )
-          tokenArg.asIR.asTokenOf[DFXInt[LS, LW]]
-      end given
-    end Compare
-
   end Token
 
   object Val:
@@ -608,26 +559,6 @@ object DFXInt:
         def conv(dfType: DFXInt[LS, LW], value: R): Out = ???
       end given
     end TC
-
-    object Compare:
-      import DFVal.Compare
-      given DFXIntCompare[
-          LS <: Boolean,
-          LW <: Int,
-          R,
-          Op <: FuncOp,
-          C <: Boolean
-      ](using
-          ic: Candidate[R]
-      )(using
-          dfc: DFC,
-          check: CompareCheck[LS, LW, ic.OutS, ic.OutW, ic.IsScalaInt, C],
-          op: ValueOf[Op],
-          castling: ValueOf[C]
-      ): Compare[DFXInt[LS, LW], R, Op, C] with
-        def conv(dfType: DFXInt[LS, LW], arg: R): DFXInt[LS, LW] <> VAL = ???
-      end DFXIntCompare
-    end Compare
   end Val
 end DFXInt
 
