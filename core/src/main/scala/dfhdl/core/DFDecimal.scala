@@ -336,39 +336,6 @@ object DFXInt:
           def apply(arg: R): Token[false, W] = ???
     end Candidate
   end Token
-
-  object Val:
-    trait Candidate[R]:
-      type OutS <: Boolean
-      type OutW <: Int
-      type IsScalaInt <: Boolean
-      def apply(arg: R)(using DFC): DFValOf[DFXInt[OutS, OutW]]
-    object Candidate:
-      transparent inline given fromTokenCandidate[R](using
-          ic: Token.Candidate[R]
-      ): Candidate[R] = new Candidate[R]:
-        type OutS = ic.OutS
-        type OutW = ic.OutW
-        type IsScalaInt = ic.IsScalaInt
-        def apply(arg: R)(using dfc: DFC): DFValOf[DFXInt[OutS, OutW]] =
-          given DFC = dfc.anonymize
-          DFVal.Const(ic(arg))
-      given fromDFXIntVal[S <: Boolean, W <: Int, R <: DFValOf[DFXInt[S, W]]]: Candidate[R] with
-        type OutS = S
-        type OutW = W
-        type IsScalaInt = false
-        def apply(arg: R)(using DFC): DFValOf[DFXInt[S, W]] = arg
-      given fromDFBitsVal[W <: Int, R <: DFValOf[DFBits[W]]]: Candidate[R] with
-        type OutS = false
-        type OutW = W
-        type IsScalaInt = false
-        def apply(arg: R)(using dfc: DFC): DFValOf[DFXInt[false, W]] = ???
-      inline given errDFEncoding[E <: DFEncoding]: Candidate[E] =
-        compiletime.error(
-          "Cannot apply an enum entry value to a dataflow decimal variable."
-        )
-    end Candidate
-  end Val
 end DFXInt
 
 type DFUInt[W <: Int] = DFXInt[false, W]
@@ -414,68 +381,6 @@ object DFUInt:
 
   type Token[W <: Int] = DFDecimal.Token[false, W, 0]
   object Token
-
-  object Val:
-    trait UBArg[UB <: Int, R]:
-      type OutW <: Int
-      def apply(ub: Inlined[UB], arg: R): DFValOf[DFUInt[OutW]]
-    trait UBArgLP:
-      transparent inline given errorDMZ[UB <: Int, R](using
-          r: ShowType[R]
-      ): UBArg[UB, R] =
-        Error.call[
-          (
-              "Upper-bound argument cannot be constructed from the type `",
-              r.Out,
-              "`."
-          )
-        ]
-    object UBArg extends UBArgLP:
-      transparent inline given fromInt[UB <: Int, R <: Int](using
-          dfc: DFC,
-          ubInfo: IntInfo[UB - 1]
-      )(using
-          unsignedCheck: Unsigned.Check[R < 0],
-          ubCheck: `UB > R`.Check[UB, R]
-      ): UBArg[UB, R] = new UBArg[UB, R]:
-        type OutW = ubInfo.OutW
-        def apply(ub: Inlined[UB], arg: R): DFValOf[DFUInt[OutW]] =
-          unsignedCheck(arg < 0)
-          // TODO: https://github.com/lampepfl/dotty/issues/15798
-          val fixme = (ub - 1).asInstanceOf[Inlined[Int]].value
-          ubCheck(fixme, arg)
-          val token =
-            DFXInt.Token(false, ubInfo.width(fixme), Some(BigInt(arg)))
-          DFVal.Const(token)
-      transparent inline given fromR[UB <: Int, R](using
-          dfc: DFC,
-          c: DFXInt.Val.Candidate[R],
-          ubInfo: IntInfo[UB - 1]
-      )(using
-          unsignedCheck: Unsigned.Check[c.OutS],
-          widthCheck: `UBW == RW`.Check[ubInfo.OutW, c.OutW]
-      ): UBArg[UB, R] = new UBArg[UB, R]:
-        type OutW = ubInfo.OutW
-        def apply(ub: Inlined[UB], arg: R): DFValOf[DFUInt[OutW]] =
-          given DFC = dfc.anonymize
-          val argVal = c(arg)
-          unsignedCheck(argVal.dfType.signed)
-          // TODO: https://github.com/lampepfl/dotty/issues/15798
-          val fixme = (ub - 1).asInstanceOf[Inlined[Int]].value
-          widthCheck(ubInfo.width(fixme), argVal.width)
-          // for constant value we apply an explicit check for the bound
-          argVal.asIR match
-            case ir.DFVal.Const(ir.DFDecimal.Token(dfType, data), _, _, _) =>
-              data match
-                case Some(value) =>
-                  summon[`UB > R`.Check[UB, Int]](ub, value.toInt)
-                case _ => // no check
-            case _ => // no check
-          argVal.asIR.asValOf[DFUInt[OutW]]
-        end apply
-    end UBArg
-  end Val
-
 end DFUInt
 
 type DFSInt[W <: Int] = DFXInt[true, W]
@@ -487,5 +392,4 @@ object DFSInt:
 
   type Token[W <: Int] = DFDecimal.Token[true, W, 0]
   object Token
-  object Val
 end DFSInt

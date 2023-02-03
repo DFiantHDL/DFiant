@@ -160,17 +160,4 @@ object DFStruct:
       }.toList
       ir.DFToken.forced(dfType.asIR, data).asTokenOf[DFStruct[F]]
   end Token
-
-  object Val:
-    private[core] def unapply(
-        fields: FieldsOrTuple
-    )(using DFC): Option[DFValOf[DFStruct[FieldsOrTuple]]] =
-      fields match
-        case DFStruct(dfType) =>
-          val dfVals = fields.productIterator.map { case dfVal: DFValAny =>
-            dfVal
-          }.toList
-          Some(DFVal.Func(dfType, FuncOp.++, dfVals)(using dfc.anonymize))
-        case _ => None
-  end Val
 end DFStruct

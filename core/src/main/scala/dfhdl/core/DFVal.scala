@@ -73,10 +73,8 @@ object DFVal:
   object OrTupleOrStruct:
     def unapply(arg: Any)(using DFC): Option[DFValAny] =
       arg match
-        case dfVal: DFValAny     => Some(dfVal)
-        case DFTuple.Val(dfVal)  => Some(dfVal)
-        case DFStruct.Val(dfVal) => Some(dfVal)
-        case _                   => None
+        case dfVal: DFValAny => Some(dfVal)
+        case _               => None
 
   trait Refiner[T <: FieldsOrTuple, A, I]:
     type Out <: DFVal[DFStruct[T], Modifier[A, Any, I]]

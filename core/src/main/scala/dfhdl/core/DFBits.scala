@@ -27,7 +27,6 @@ object DFBits:
 
   type Token[W <: Int] = CompanionsDFBits.Token[W]
   val Token = CompanionsDFBits.Token
-  val Val = CompanionsDFBits.Val
 end DFBits
 
 private object CompanionsDFBits:
@@ -175,54 +174,4 @@ private object CompanionsDFBits:
     end Candidate
 
   end Token
-
-  object Val:
-    trait Candidate[R]:
-      type OutW <: Int
-      def apply(value: R)(using DFC): DFBits[OutW] <> VAL
-    object Candidate:
-      given fromDFBits[W <: Int, R <: DFBits[W] <> VAL]: Candidate[R] with
-        type OutW = W
-        def apply(value: R)(using DFC): DFBits[W] <> VAL =
-          value
-      given fromDFUInt[W <: Int, R <: DFUInt[W] <> VAL]: Candidate[R] with
-        type OutW = W
-        def apply(value: R)(using DFC): DFBits[W] <> VAL = ???
-      inline given errDFEncoding[E <: DFEncoding]: Candidate[E] =
-        compiletime.error(
-          "Cannot apply an enum entry value to a bits variable."
-        )
-      inline given errDFSInt[W <: Int, R <: DFSInt[W] <> VAL]: Candidate[R] =
-        compiletime.error(
-          "Cannot apply a signed value to a bits variable.\nConsider applying `.bits` conversion to resolve this issue."
-        )
-      transparent inline given fromDFBitsTokenCandidate[R](using
-          ic: Token.Candidate[R]
-      ): Candidate[R] = new Candidate[R]:
-        type OutW = ic.OutW
-        def apply(arg: R)(using DFC): DFBits[OutW] <> VAL =
-          DFVal.Const(ic(arg))
-
-      private[Val] def valueToBits(value: Any)(using dfc: DFC): DFBits[Int] <> VAL = ???
-      transparent inline given fromTuple[R <: NonEmptyTuple]: Candidate[R] = ${
-        DFBitsMacro[R]
-      }
-      def DFBitsMacro[R](using
-          Quotes,
-          Type[R]
-      ): Expr[Candidate[R]] =
-        import quotes.reflect.*
-        import Width.*
-        val rTpe = TypeRepr.of[R]
-        val wType = rTpe.calcValWidth(false).asTypeOf[Int]
-        '{
-          new Candidate[R]:
-            type OutW = wType.Underlying
-            def apply(value: R)(using DFC): DFValOf[DFBits[OutW]] =
-              valueToBits(value).asIR.asValOf[DFBits[OutW]]
-        }
-      end DFBitsMacro
-    end Candidate
-
-  end Val
 end CompanionsDFBits

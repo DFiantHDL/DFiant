@@ -119,18 +119,4 @@ object DFTuple:
     ): Token[T] =
       ir.DFToken(dfType.asIR)(data).asTokenOf[DFTuple[T]]
   end Token
-
-  object Val:
-    private[core] def unapply(
-        tuple: Tuple
-    )(using DFC): Option[DFValOf[DFTuple[NonEmptyTuple]]] =
-      val dfVals = tuple.toList.flatMap {
-        case DFVal.OrTupleOrStruct(dfVal) => Some(dfVal)
-        case _                            => None
-      }
-      if (tuple.size == dfVals.length)
-        val dfType = DFTuple[NonEmptyTuple](dfVals.map(_.dfType))
-        Some(DFVal.Func(dfType, FuncOp.++, dfVals)(using dfc.anonymize))
-      else None
-  end Val
 end DFTuple

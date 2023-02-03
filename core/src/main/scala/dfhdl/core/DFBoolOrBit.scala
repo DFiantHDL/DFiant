@@ -82,30 +82,6 @@ object DFBoolOrBit:
         op: FuncOp
     ): DFToken[T] = logicOp[T, T](token.dfType, token, tokenArg, op)
   end Token
-
-  object Val:
-    @implicitNotFound(
-      "Argument of type ${R} is not a proper candidate for a DFBool or DFBit dataflow value."
-    )
-    trait Candidate[R]:
-      type OutT <: DFBoolOrBit
-      def apply(arg: R)(using DFC): DFValOf[OutT]
-    object Candidate:
-      transparent inline given fromTokenCandidate[R](using
-          ic: Token.Candidate[R]
-      ): Candidate[R] = new Candidate[R]:
-        type OutT = ic.OutT
-        def apply(arg: R)(using DFC): DFValOf[OutT] = DFVal.Const(ic(arg))
-      transparent inline given fromDFBoolOrBitVal[T <: DFBoolOrBit, R <: T <> VAL]: Candidate[R] =
-        new Candidate[R]:
-          type OutT = T
-          def apply(arg: R)(using DFC): T <> VAL = arg
-
-    private def b2b[T <: DFBoolOrBit, R](dfType: T, arg: R)(using
-        ic: Candidate[R],
-        dfc: DFC
-    ): T <> VAL = ???
-  end Val
 end DFBoolOrBit
 
 type DFBool = DFType[ir.DFBool.type, NoArgs]
