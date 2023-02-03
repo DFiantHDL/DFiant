@@ -57,20 +57,6 @@ object DFBoolOrBit:
         def apply(arg: R): DFToken[T] = arg
     end Candidate
 
-    object TC:
-      import DFToken.TC
-      given DFBoolTokenFromCandidate[T <: DFBoolOrBit, R](using
-          ic: Candidate[R]
-      ): TC[T, R] with
-        def conv(dfType: T, arg: R): Out =
-          val tokenArg = ic(arg)
-          val tokenOut = (dfType, tokenArg.dfType) match
-            case (DFBit, DFBool) => Token(DFBit, tokenArg.data)
-            case (DFBool, DFBit) => Token(DFBool, tokenArg.data)
-            case _               => tokenArg
-          tokenOut.asIR.asTokenOf[T]
-    end TC
-
     private def logicOp[O <: DFBoolOrBit, T <: DFBoolOrBit](
         dfType: O,
         token: DFToken[T],
@@ -119,15 +105,6 @@ object DFBoolOrBit:
         ic: Candidate[R],
         dfc: DFC
     ): T <> VAL = ???
-
-    object TC:
-      import DFVal.TC
-      given DFBoolOrBitFromCandidate[T <: DFBoolOrBit, R](using
-          dfc: DFC,
-          ic: Candidate[R]
-      ): TC[T, R] with
-        def conv(dfType: T, arg: R): Out = b2b(dfType, arg)
-    end TC
   end Val
 end DFBoolOrBit
 

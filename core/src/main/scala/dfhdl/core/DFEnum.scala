@@ -96,20 +96,5 @@ object DFEnum:
         entry: RE
     ): Token[E] =
       ir.DFToken(dfType.asIR)(Some(entry.bigIntValue)).asTokenOf[DFEnum[E]]
-
-    object TC:
-      import DFToken.TC
-      given DFEnumTokenFromEntry[E <: DFEncoding, RE <: E]: TC[DFEnum[E], RE] =
-        (dfType: DFEnum[E], value: RE) => Token[E, RE](dfType, value)
-
   end Token
-  object Val:
-    object TC:
-      import DFVal.TC
-      given DFEnumFromEntry[E <: DFEncoding, RE <: E](using
-          dfc: DFC
-      ): TC[DFEnum[E], RE] with
-        def conv(dfType: DFEnum[E], value: RE): DFValOf[DFEnum[E]] =
-          DFVal.Const(Token[E, RE](dfType, value))
-  end Val
 end DFEnum

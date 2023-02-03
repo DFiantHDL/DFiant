@@ -174,31 +174,6 @@ private object CompanionsDFBits:
       end DFBitsMacro
     end Candidate
 
-    object TC:
-      import DFToken.TC
-      protected object `W == VW`
-          extends Check2[
-            Int,
-            Int,
-            [W <: Int, VW <: Int] =>> W == VW,
-            [W <: Int, VW <: Int] =>> "The token width (" + VW +
-              ") is different than the DFType width (" + W + ")."
-          ]
-
-      // TODO: minimize error when removing aux pattern
-      given DFBitsTokenFromCandidate[W <: Int, R, VW <: Int](using
-          ic: Candidate.Aux[R, VW]
-      )(using check: `W == VW`.Check[W, VW]): TC[DFBits[W], R] with
-        def conv(dfType: DFBits[W], value: R): Out =
-          val tokenArg = ic(value)
-          check(dfType.width, tokenArg.asIR.width)
-          tokenArg.asInstanceOf[Out]
-
-      given DFBitsTokenFromSEV[W <: Int, T <: BitOrBool, V <: SameElementsVector[T]]
-          : TC[DFBits[W], V] with
-        def conv(dfType: DFBits[W], value: V): Out =
-          DFBits.Token(dfType.width, value)
-    end TC
   end Token
 
   object Val:
@@ -249,38 +224,5 @@ private object CompanionsDFBits:
       end DFBitsMacro
     end Candidate
 
-    object TC:
-      import DFVal.TC
-      def apply(
-          dfType: DFBits[Int],
-          dfVal: DFBits[Int] <> VAL
-      ): DFBits[Int] <> VAL =
-        `LW == RW`(dfType.width, dfVal.width)
-        dfVal
-      protected object `LW == RW`
-          extends Check2[
-            Int,
-            Int,
-            [LW <: Int, RW <: Int] =>> LW == RW,
-            [LW <: Int, RW <: Int] =>> "The argument width (" + ToString[RW] +
-              ") is different than the receiver width (" + ToString[LW] +
-              ").\nConsider applying `.resize` to resolve this issue."
-          ]
-      given DFBitsFromCandidate[
-          LW <: Int,
-          V
-      ](using dfc: DFC, candidate: Candidate[V])(using
-          check: `LW == RW`.Check[LW, candidate.OutW]
-      ): TC[DFBits[LW], V] with
-        def conv(dfType: DFBits[LW], value: V): DFValOf[DFBits[LW]] =
-          val dfVal = candidate(value)
-          check(dfType.width, dfVal.width.value)
-          dfVal.asIR.asValOf[DFBits[LW]]
-      given DFBitsFromSEV[LW <: Int, T <: BitOrBool, V <: SameElementsVector[T]](using
-          dfc: DFC
-      ): TC[DFBits[LW], V] with
-        def conv(dfType: DFBits[LW], value: V): DFValOf[DFBits[LW]] =
-          DFVal.Const(Token(dfType.width, value))
-    end TC
   end Val
 end CompanionsDFBits

@@ -30,12 +30,6 @@ object DFOpaque:
         tfe: TFE,
         token: DFTokenAny
     ): Token[TFE] = ???
-
-    object TC
   end Token
-
-  object Val:
-    object TC
-  end Val
 
 end DFOpaque

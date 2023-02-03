@@ -288,64 +288,7 @@ object DFDecimal:
         fractionWidth: Inlined[F],
         value: Int
     ): Token[S, W, F] = Token(signed, width, fractionWidth, BigInt(value))
-
-    private val widthIntExp = "(\\d+)'(-?\\d+)".r
-    private val widthFixedExp = "(\\d+)\\.(\\d+)'(-?\\d+)\\.?(\\d*)".r
-    private val intExp = "(-?\\d+)".r
-    private def fromDecString(
-        dec: String,
-        signedForced: Boolean
-    ): Either[String, (Boolean, Int, Int, BigInt)] =
-      def fromValidString(numStr: String): (Boolean, Int, Int, BigInt) =
-        val value = BigInt(numStr)
-        val signed = value < 0 | signedForced
-        val actualWidth = value.bitsWidth(signed)
-        (signed, actualWidth, 0, value)
-      dec.replace(",", "").replace("_", "") match
-        case widthFixedExp(
-              magnitudeWidthStr,
-              fractionWidthStr,
-              magnitudeStr,
-              fractionStr
-            ) =>
-          val explicitMagnitudeWidth = magnitudeWidthStr.toInt
-          val explicitFractionWidth = fractionWidthStr.toInt
-          val magnitude = BigInt(magnitudeStr)
-          val fraction =
-            if (fractionStr.isEmpty) BigInt(0) else BigInt(fractionStr)
-          Left("Fixed-point decimal literals are not yet supported")
-        case widthIntExp(widthStr, numStr) =>
-          val explicitWidth = widthStr.toInt
-          val (signed, width, fractionWidth, value) = fromValidString(numStr)
-          if (explicitWidth < width)
-            Left(
-              s"Explicit given width ($explicitWidth) is smaller than the actual width ($width)"
-            )
-          else
-            Right((signed, explicitWidth, fractionWidth, value))
-        case intExp(numStr) => Right(fromValidString(numStr))
-        case _ =>
-          Left(s"Invalid decimal pattern found: $dec")
-      end match
-    end fromDecString
-
-    object TC:
-      export DFXInt.Token.TC.given
-
   end Token
-
-  object Val:
-    object TC:
-      export DFXInt.Val.TC.given
-      def apply(
-          dfType: DFDecimal[Boolean, Int, Int],
-          dfVal: DFDecimal[Boolean, Int, Int] <> VAL
-      ): DFDecimal[Boolean, Int, Int] <> VAL =
-        `LW >= RW`(dfType.width, dfVal.width)
-        `LS >= RS`(dfType.signed, dfVal.dfType.signed)
-        dfVal
-    end TC
-  end Val
 end DFDecimal
 
 type DFXInt[S <: Boolean, W <: Int] = DFDecimal[S, W, 0]
@@ -392,17 +335,6 @@ object DFXInt:
           type IsScalaInt = false
           def apply(arg: R): Token[false, W] = ???
     end Candidate
-
-    object TC:
-      import DFToken.TC
-      given [LS <: Boolean, LW <: Int, R](using
-          ic: Candidate[R]
-      )(using
-          check: TCCheck[LS, LW, ic.OutS, ic.OutW]
-      ): TC[DFXInt[LS, LW], R] with
-        def conv(dfType: DFXInt[LS, LW], value: R): Out = ???
-      end given
-    end TC
   end Token
 
   object Val:
@@ -436,18 +368,6 @@ object DFXInt:
           "Cannot apply an enum entry value to a dataflow decimal variable."
         )
     end Candidate
-
-    object TC:
-      import DFVal.TC
-      given [LS <: Boolean, LW <: Int, R](using
-          ic: Candidate[R],
-          dfc: DFC
-      )(using
-          check: TCCheck[LS, LW, ic.OutS, ic.OutW]
-      ): TC[DFXInt[LS, LW], R] with
-        def conv(dfType: DFXInt[LS, LW], value: R): Out = ???
-      end given
-    end TC
   end Val
 end DFXInt
 

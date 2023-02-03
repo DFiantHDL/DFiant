@@ -118,21 +118,6 @@ object DFTuple:
         data: List[Any]
     ): Token[T] =
       ir.DFToken(dfType.asIR)(data).asTokenOf[DFTuple[T]]
-
-    object TC:
-      import DFToken.TC
-      given DFTupleTokenFromTuple[
-          T <: NonEmptyTuple,
-          V <: NonEmptyTuple
-      ](using
-          zipper: TCZipper[T, V, DFTokenAny, TC]
-      ): TC[DFTuple[T], V] with
-        def conv(dfType: DFTuple[T], value: V): Out =
-          DFTuple.Token[T](
-            dfType,
-            zipper(dfType.fieldList, value.toList).map(_.asIR.data)
-          )
-    end TC
   end Token
 
   object Val:
@@ -147,19 +132,5 @@ object DFTuple:
         val dfType = DFTuple[NonEmptyTuple](dfVals.map(_.dfType))
         Some(DFVal.Func(dfType, FuncOp.++, dfVals)(using dfc.anonymize))
       else None
-    object TC:
-      import DFVal.TC
-      given DFTupleArg[
-          T <: NonEmptyTuple,
-          R <: NonEmptyTuple
-      ](using
-          zipper: TCZipper[T, R, DFValAny, TC],
-          dfc: DFC
-      ): TC[DFTuple[T], R] with
-        def conv(dfType: DFTuple[T], value: R): Out =
-          val dfVals =
-            zipper(dfType.fieldList, value.toList)
-          DFVal.Func(dfType, FuncOp.++, dfVals)(using dfc.anonymize)
-    end TC
   end Val
 end DFTuple

@@ -159,24 +159,6 @@ object DFStruct:
             )
       }.toList
       ir.DFToken.forced(dfType.asIR, data).asTokenOf[DFStruct[F]]
-    object TC:
-      import DFToken.TC
-      given DFStructTokenFromCC[
-          F <: Fields,
-          RF <: Fields
-      ](using sf: SameFields[F, RF]): TC[DFStruct[F], RF] with
-        def conv(dfType: DFStruct[F], value: RF): Out =
-          sf.check(dfType, DFStruct(value))
-          Token(dfType, value)
-      given DFStructTokenFromStruct[
-          F <: Fields,
-          RF <: Fields,
-          V <: Token[RF]
-      ](using sf: SameFields[F, RF]): TC[DFStruct[F], V] with
-        def conv(dfType: DFStruct[F], value: V): Out =
-          sf.check(dfType, value.dfType)
-          value.asIR.asTokenOf[DFStruct[F]]
-    end TC
   end Token
 
   object Val:
@@ -190,26 +172,5 @@ object DFStruct:
           }.toList
           Some(DFVal.Func(dfType, FuncOp.++, dfVals)(using dfc.anonymize))
         case _ => None
-    object TC:
-      import DFVal.TC
-      given DFStructValFromCC[
-          F <: Fields,
-          RF <: Fields
-      ](using dfc: DFC, sf: SameFields[F, RF]): TC[DFStruct[F], RF] with
-        def conv(dfType: DFStruct[F], value: RF): Out =
-          sf.check(dfType, DFStruct(value))
-          val dfVals = value.productIterator.map { case dfVal: DFVal[_, _] =>
-            dfVal
-          }.toList
-          DFVal.Func(dfType, FuncOp.++, dfVals)(using dfc.anonymize)
-      given DFStructValFromStruct[
-          F <: Fields,
-          RF <: Fields,
-          V <: DFValOf[DFStruct[RF]]
-      ](using dfc: DFC, sf: SameFields[F, RF]): TC[DFStruct[F], V] with
-        def conv(dfType: DFStruct[F], value: V): Out =
-          sf.check(dfType, value.dfType)
-          value.asIR.asValOf[DFStruct[F]]
-    end TC
   end Val
 end DFStruct
