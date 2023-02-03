@@ -2,14 +2,10 @@ package dfhdl.core
 
 object ir:
   sealed trait DFType
-  sealed trait DFBoolOrBit extends DFType
-  case object DFBit extends DFBoolOrBit
+  case object DFBit extends DFType
 
 final class DFError extends Exception("") derives CanEqual
-
-final class DFType[+T](val value: T | DFError) extends AnyVal:
-  override def toString: String = value.toString
-type DFTypeAny = DFType[ir.DFType]
+final class DFType[+T](val value: T | DFError) extends AnyVal
 
 extension [T <: ir.DFType](dfType: DFType[T])
   def asIR: T = dfType.value match
