@@ -33,7 +33,6 @@ lazy val root = (project in file("."))
   )
   .aggregate(
     internals,
-    plugin,
     compiler_ir,
     core,
 	compiler_stages,
@@ -47,14 +46,6 @@ lazy val internals = project
     libraryDependencies ++= commonDependencies
   )
 
-lazy val plugin = project
-  .settings(
-    name := s"$projectName-plugin",
-    settings,
-    crossTarget := target.value / s"scala-${scalaVersion.value}", // workaround for https://github.com/sbt/sbt/issues/5097
-    crossVersion := CrossVersion.full,
-    libraryDependencies += "org.scala-lang" %% "scala3-compiler" % compilerVersion % "provided"
-  ).dependsOn(internals)
 
 lazy val compiler_ir = (project in file("compiler/ir"))
   .settings(
@@ -66,11 +57,9 @@ lazy val core = project
   .settings(
     name := s"$projectName-core",
     settings,
-    pluginTestUseSettings,
     libraryDependencies ++= commonDependencies :+ dependencies.scalafmt
   )
   .dependsOn(
-    plugin,
     internals,
     compiler_ir
   )
@@ -79,11 +68,9 @@ lazy val compiler_stages = (project in file("compiler/stages"))
   .settings(
     name := s"$projectName-compiler-stages",
     settings,
-    pluginTestUseSettings,
     libraryDependencies ++= commonDependencies
   )
   .dependsOn(
-    plugin,
     internals,
     compiler_ir,
     core
@@ -93,7 +80,6 @@ lazy val lib = project
   .settings(
     name := projectName,
     settings,
-    pluginUseSettings,
     libraryDependencies ++= commonDependencies
   )
   .dependsOn(
@@ -133,26 +119,6 @@ lazy val compilerOptions = Seq(
   "-language:implicitConversions",
   "-language:experimental",
   "-deprecation",
-)
-
-lazy val pluginUseSettings = Seq(
-  Compile / scalacOptions ++= {
-    val jar = (plugin / Compile / packageBin).value
-    Seq(
-      s"-Xplugin:${jar.getAbsolutePath}",
-      s"-Jdummy=${jar.lastModified}"
-    )
-  }
-)
-
-lazy val pluginTestUseSettings = Seq(
-  Test / scalacOptions ++= {
-    val jar = (plugin / Compile / packageBin).value
-    Seq(
-      s"-Xplugin:${jar.getAbsolutePath}",
-      s"-Jdummy=${jar.lastModified}"
-    )
-  }
 )
 
 lazy val commonSettings = Seq(
