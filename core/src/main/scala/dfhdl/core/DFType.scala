@@ -1,5 +1,10 @@
 package dfhdl.core
 
+object ir:
+  sealed trait DFType
+  sealed trait DFBoolOrBit extends DFType
+  case object DFBit extends DFBoolOrBit
+
 final class DFError extends Exception("") derives CanEqual
 
 final class DFType[+T](val value: T | DFError) extends AnyVal:
