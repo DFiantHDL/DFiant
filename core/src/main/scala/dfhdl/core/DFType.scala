@@ -35,3 +35,5 @@ object DFType:
       def apply(t: T): Type = t
   end TC
 end DFType
+
+export DFType.asFE
