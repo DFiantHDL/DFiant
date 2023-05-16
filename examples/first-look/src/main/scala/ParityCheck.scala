@@ -1,4 +1,4 @@
-import DFiant._
+import dfhdl._
 
 @df class ParityCheck extends DFDesign {
   val seqIn  = Bit <> IN

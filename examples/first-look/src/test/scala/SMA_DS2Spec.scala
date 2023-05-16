@@ -1,5 +1,5 @@
-import DFiant.TestUtils._
-import DFiant._
+import dfhdl.TestUtils._
+import dfhdl._
 
 class SMA_DS2Spec extends DFTopSpec {
   val sma = new SMA_DS2

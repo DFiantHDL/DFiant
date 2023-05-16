@@ -1,6 +1,6 @@
 # State & Initialization
 
-Semantically, every DFiant dataflow variable references a token stream (TS). 
+Semantically, every DFHDL dataflow variable references a token stream (TS). 
 
 
 
@@ -22,7 +22,7 @@ Semantically, every DFiant dataflow variable references a token stream (TS).
   
     | Code                                   | Init        | Token Stream          |
     | -------------------------------------- | ----------- | --------------------- |
-    | `in : DFUInt[32]`                      | `?`         | `2, 3, 1, 5, 9`       |
+    | `in : UInt[32]`                      | `?`         | `2, 3, 1, 5, 9`       |
     | `in.prev`                              | `?`         | `?, 2, 3, 1, 5, 9`    |
     | `in.prev(2)`                           | `?`         | `?, ?, 2, 3, 1, 5, 9` |
     | `in.prev.prev`                         | `?`         | `?, ?, 2, 3, 1, 5, 9` |
@@ -30,7 +30,7 @@ Semantically, every DFiant dataflow variable references a token stream (TS).
     | `in1.prev`                             | `1`         | `1, 2, 3, 1, 5, 9`    |
     | `in1.prev(2)`                          | `1`         | `1, 1, 2, 3, 1, 5, 9` |
     | `in1.prev.init(8)`                     | `8`         | `1, 2, 3, 1, 5, 9`    |
-    | `val innew = DFUInt(32) := in1; innew` | `?`         | `2, 3, 1, 5, 9`       |
+    | `val innew = UInt(32) := in1; innew` | `?`         | `2, 3, 1, 5, 9`       |
     | `val ins7 = in.init(7, ?); ins7`       | `(7, ?)`    | `2, 3, 1, 5, 9`       |
     | `ins7.prev`                            | `?`         | `7, 2, 3, 1, 5, 9`    |
     | `val ins78 = in.init(7, 8, ?); ins78`  | `(7, 8, ?)` | `2, 3, 1, 5, 9`       |
@@ -47,7 +47,7 @@ Semantically, every DFiant dataflow variable references a token stream (TS).
   * Unless stated otherwise, any operation with a bubble token produces a bubble token (consuming the non-bubble token.). E.g., 
   
     ```scala
-    def foo(a : DFUInt(8)) = a + a.prev
+    def foo(a : UInt(8)) = a + a.prev
     //'in' is token stream of:    2, 3, 1, 5, 9
     //'foo(in)' returns:          ?, 5, 4, 6, 14
     ```
@@ -58,8 +58,8 @@ Semantically, every DFiant dataflow variable references a token stream (TS).
   
     | Code                                  | Init                                    | Token Stream                             |
     | ------------------------------------- | --------------------------------------- | ---------------------------------------- |
-    | `inL : DFUInt(32)`                    | `?`                                     | `2, 3, 1, 5, 9`                          |
-    | `inR : DFUInt(32)`                    | `?`                                     | `4, 0, 2`                                |
+    | `inL : UInt(32)`                    | `?`                                     | `2, 3, 1, 5, 9`                          |
+    | `inR : UInt(32)`                    | `?`                                     | `4, 0, 2`                                |
     | `inL + inR`                           | `?` `+`<br />`?` `=`<br />`?`           | `2, 3, 1, 5, 9` `+`<br />`4, 0, 2` `=`<br />`6, 3, 3` |
     | `inL + inR.prev`                      | `?` `+`<br />`?` `=`<br />`?`           | `2, 3, 1, 5, 9` `+`<br />`?, 4, 0, 2` `=`<br />`?, 7, 1, 7` |
     | `inL.init(1) + inR.init(3).prev`      | `1` `+`<br />`3` `=`<br />`4`           | `2, 3, 1, 5, 9` `+`<br />`3, 4, 0, 2` `=`<br />`5, 7, 1, 7` |
@@ -76,7 +76,7 @@ Semantically, every DFiant dataflow variable references a token stream (TS).
 
   * Parts of a bits vector can be bubbles while others normal values.
 
-  * However, when casting to a number (e.g., DFUInt), the casting must check validity of all bits.
+  * However, when casting to a number (e.g., UInt), the casting must check validity of all bits.
 
 
 

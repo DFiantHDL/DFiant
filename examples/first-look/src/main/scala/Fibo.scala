@@ -1,4 +1,4 @@
-import DFiant._
+import dfhdl._
 
 @df class Fibo extends DFDesign {
   val o = UInt(32) <> OUT

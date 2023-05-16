@@ -1,6 +1,6 @@
 # Errors & Warnings
 
-DFiant-related compiler errors & warnings and ways to resolve them
+DFHDL-related compiler errors & warnings and ways to resolve them
 
 ---
 

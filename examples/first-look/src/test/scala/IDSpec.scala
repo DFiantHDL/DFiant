@@ -1,4 +1,4 @@
-import DFiant._
+import dfhdl._
 
 import TestUtils._
 import compiler.printer.formatter._

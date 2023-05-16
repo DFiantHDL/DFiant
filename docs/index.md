@@ -10,7 +10,7 @@ The Official DFiant Hardware Description Language (HDL) Documentation
 
 Welcome to the DFiant hardware description language (HDL) documentation! 
 
-DFiant is a dataflow HDL and is embedded as a library in the [Scala programming language](https://www.scala-lang.org/). DFiant enables  timing-agnostic and device-agnostic hardware description by using dataflow firing rules as logical constructs, coupled with modern software language features (e.g., inheritance, polymorphism) and classic HDL features (e.g., bit-accuracy, input/output ports).
+DFHDL is a dataflow HDL and is embedded as a library in the [Scala programming language](https://www.scala-lang.org/). DFHDL enables  timing-agnostic and device-agnostic hardware description by using dataflow firing rules as logical constructs, coupled with modern software language features (e.g., inheritance, polymorphism) and classic HDL features (e.g., bit-accuracy, input/output ports).
 
 By this point you may already have some questions: 
 
@@ -20,7 +20,7 @@ By this point you may already have some questions:
 
 Answers to these questions await you at the linked sections.
 
-**But**, if you're curious about the DFiant language, [checkout our first-look section](intro/first-look) first.
+**But**, if you're curious about the DFHDL language, [checkout our first-look section](intro/first-look) first.
 
 
 

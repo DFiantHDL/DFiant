@@ -1,4 +1,4 @@
-import DFiant._
+import dfhdl._
 
 @df class SMA_DS2 extends DFDesign {
   val x   = SInt(16) <> IN init 0

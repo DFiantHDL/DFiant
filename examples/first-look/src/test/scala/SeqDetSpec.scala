@@ -1,5 +1,5 @@
-import DFiant.TestUtils._
-import DFiant._
+import dfhdl.TestUtils._
+import dfhdl._
 
 class SeqDetSpec extends DFTopSpec {
   val seqDet = new SeqDet

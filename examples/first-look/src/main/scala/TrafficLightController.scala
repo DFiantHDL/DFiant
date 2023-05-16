@@ -1,4 +1,4 @@
-import DFiant._
+import dfhdl._
 
 import lib.sequential._
 @df final class TrafficLightController(

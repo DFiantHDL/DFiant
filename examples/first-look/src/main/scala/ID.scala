@@ -1,4 +1,4 @@
-import DFiant._
+import dfhdl._
 
 @df class ID extends DFDesign { //This our `ID` dataflow design
   val x = SInt(16) <> IN  //The input port is a signed 16-bit integer

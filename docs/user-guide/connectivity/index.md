@@ -50,13 +50,13 @@ Connections annotation is generally used to connect parent designs to their chil
 
 ```scala
 trait IODesign extends DFDesign {
-  val i = DFUInt(8) <> IN
-  val o = DFUInt(8) <> OUT
+  val i = UInt(8) <> IN
+  val o = UInt(8) <> OUT
   o <> i
 }
 trait Container2 extends DFDesign {
-  val i = DFUInt(8) <> IN
-  val o = DFUInt(8) <> OUT
+  val i = UInt(8) <> IN
+  val o = UInt(8) <> OUT
   val io1 = new IODesign {}
   val io2 = new IODesign {}
   i     <> io1.i //Connecting between owner input and child input
@@ -73,9 +73,9 @@ At least one of the connected sides must be a dataflow port (cannot connect two 
 
 ```scala
 trait Conn1 {
-  val port = DFUInt(8) <> OUT
-  val temp1 = DFUInt(8)
-  val temp2 = DFUInt(8)
+  val port = UInt(8) <> OUT
+  val temp1 = UInt(8)
+  val temp2 = UInt(8)
   port <> temp1 //OK!
   temp1 <> temp2 //Bad connection! At least one connection side must be a port
 }
@@ -89,8 +89,8 @@ An input port cannot be assigned to. A connection must be used to transfer data 
 
 ```scala
 trait IO extends DFDesign {
-  val in  = DFUInt(8) <> IN
-  val out = DFUInt(8) <> OUT
+  val in  = UInt(8) <> IN
+  val out = UInt(8) <> OUT
   out := in //OK! Can assign internally to an output port
 }
 trait Assign1 extends DFDesign {
@@ -109,8 +109,8 @@ When connecting a port to an immutable value, the port must be a consumer, meani
 
 ```scala
 trait IO extends DFDesign {
-  val i = DFUInt(8) <> IN
-  val o = DFUInt(8) <> OUT
+  val i = UInt(8) <> IN
+  val o = UInt(8) <> OUT
   //For brevity, we consider every connection/assignment in this example separately.
   //We ignore multiple connection issues that should arise.
   o <> 1 //OK!
@@ -132,13 +132,13 @@ Connecting between different types is possible, but depends on the specific type
 
 ```scala
 trait DifferentTypesConn extends DFDesign {
-  val i = DFUInt(8) <> IN
-  val o = DFUInt(8) <> OUT
-  val ob9 = DFBits(9) <> OUT
+  val i = UInt(8) <> IN
+  val o = UInt(8) <> OUT
+  val ob9 = Bits(9) <> OUT
   
-  val u7 = DFUInt(7)
-  val u9 = DFUInt(9)
-  val b8 = DFBits(8)
+  val u7 = UInt(7)
+  val u9 = UInt(9)
+  val b8 = Bits(8)
   
   //For brevity, we consider every connection/assignment in this example separately.
   //We ignore multiple connection issues that should arise.
@@ -162,21 +162,21 @@ Two or more dataflow producers cannot be connected to the same consumer (a singl
 
 ```scala
 trait Gen extends DFDesign {
-  val out1 = DFUInt(8) <> OUT init 1
-  val out2 = DFUInt(8) <> OUT init 2
+  val out1 = UInt(8) <> OUT init 1
+  val out2 = UInt(8) <> OUT init 2
 }
 trait Conn2 extends DFDesign {
-  val in1 = DFUInt(8) <> IN
-  val in2 = DFUInt(8) <> IN
-  val out = DFUInt(8) <> OUT
-  val temp1 = DFUInt(8)
+  val in1 = UInt(8) <> IN
+  val in2 = UInt(8) <> IN
+  val out = UInt(8) <> OUT
+  val temp1 = UInt(8)
   temp1 <> in1 //OK!
   out   <> in1 //Also OK! (Same producer can connect to more than one cosumer)
   temp1 <> in2 //Bad connection! Second producer connection to temp1
   
   val gen = new Gen {}
-  val temp2 = DFUInt(8)
-  val temp3 = DFUInt(8)
+  val temp2 = UInt(8)
+  val temp3 = UInt(8)
   gen.out1 <> temp2 //OK!
   gen.out1 <> temp3 //Also OK! (Same producer can connect to more than one cosumer)
   gen.out2 <> temp2 //Bad connection! Second producer connection to temp2
@@ -191,9 +191,9 @@ The same consumer cannot be both assigned to and connected to as the consumer, e
 
 ```scala
 trait Conn3 extends DFDesign {
-  val out1 = DFUInt(8) <> OUT
-  val out2 = DFUInt(8) <> OUT
-  val out3 = DFUInt(8) <> OUT
+  val out1 = UInt(8) <> OUT
+  val out2 = UInt(8) <> OUT
+  val out3 = UInt(8) <> OUT
   out1 <> 1 //OK!
   out1 := 1 //Bad assignment! Cannot assign to a connected dataflow variable
 
@@ -218,14 +218,14 @@ A connection `<>` transfers initial conditions to the consumer, but if the consu
 
 ```scala
 trait IOInit extends DFDesign {
-  val i = DFUInt(8)        //init = (11, 12) Overriden from TopInit connection
-  val o = DFUInt(8) init 5 //init = (5)      Not overridden due to assignment
+  val i = UInt(8)        //init = (11, 12) Overriden from TopInit connection
+  val o = UInt(8) init 5 //init = (5)      Not overridden due to assignment
   val ip = i.prev          //init = (12)     Prev moves down the init queue
   o := ip 
 }
 trait TopInit extends DFDesign {
-  val i = DFUInt(8) <> IN.init(1, 2)  //init = (1, 2)   The top-level initial conditions
-  val o = DFUInt(8) <> OUT init 1     //init = (1)      Keeps its initializaion
+  val i = UInt(8) <> IN.init(1, 2)  //init = (1, 2)   The top-level initial conditions
+  val o = UInt(8) <> OUT init 1     //init = (1)      Keeps its initializaion
   val iPlus10 = in + 10               //init = (11, 12) Arithmetics affect init
   val io = new IOInit {}
   io.i <> inPlus10  										
@@ -252,15 +252,15 @@ Example:
 
 ```scala
 trait IOInit2 extends DFDesign {
-  val i1 = DFUInt(8) <> IN init 5
-  val o1 = DFUInt(8) <> OUT
-  val i2 = DFUInt(8) <> IN
-  val o2 = DFUInt(8) <> OUT init 2
+  val i1 = UInt(8) <> IN init 5
+  val o1 = UInt(8) <> OUT
+  val i2 = UInt(8) <> IN
+  val o2 = UInt(8) <> OUT init 2
   o1 <> i1 
 }
 trait TopIO2 extends DFDesign {
-  val i = DFUInt(8) <> IN  
-  val o = DFUInt(8) <> OUT //Will generate infinite tokens of 2, due to io.o2 init
+  val i = UInt(8) <> IN  
+  val o = UInt(8) <> OUT //Will generate infinite tokens of 2, due to io.o2 init
   val io = new IO5 {}
   o <> io.o2
   i <> io.i1
@@ -277,34 +277,34 @@ Connections enable dataflow feedbacks and even dataflow dependency loops. There 
 
 ```scala
 trait IO1 extends DFDesign {
-  val i = DFUInt(8) <> IN
-  val o = DFUInt(8) <> OUT
+  val i = UInt(8) <> IN
+  val o = UInt(8) <> OUT
   o <> i //Connection transfers initial conditions from i to o
 }
 trait BadConnLoop1 extends DFDesign {
-  val o = DFUInt(8) <> OUT
+  val o = UInt(8) <> OUT
   val io = new IO1 {}
   io.i <> io.o //Bad connection! An initial conditions cyclic loop
   o  <> io.o
 }
 trait IO2 extends DFDesign {
-  val i = DFUInt(8) <> IN
-  val o = DFUInt(8) <> OUT
+  val i = UInt(8) <> IN
+  val o = UInt(8) <> OUT
   o <> i.prev //prev transfers initial conditions
 }
 trait BadConnLoop2 extends DFDesign {
-  val o = DFUInt(8) <> OUT
+  val o = UInt(8) <> OUT
   val io = new IO2 {}
   io.i <> io.o //Bad connection! An initial conditions cyclic loop
   o  <> io.o
 }
 trait IO3 extends DFDesign {
-  val i = DFUInt(8) <> IN
-  val o = DFUInt(8) <> OUT
+  val i = UInt(8) <> IN
+  val o = UInt(8) <> OUT
   o := i //Assignment does not affect initial conditions and therefore breaks the loop
 }
 trait OKConnLoop extends DFDesign {
-  val o = DFUInt(8) <> OUT
+  val o = UInt(8) <> OUT
   val io = new IO3 {}
   io.i <> io.o //OK!
   o  <> io.o
@@ -320,8 +320,8 @@ trait OKConnLoop extends DFDesign {
 
 ```scala
 trait IODesign extends DFDesign {
-  val i = DFUInt(8) <> IN
-  val o = DFUInt(8) <> OUT
+  val i = UInt(8) <> IN
+  val o = UInt(8) <> OUT
   o <> i
 }
 ```
@@ -332,9 +332,9 @@ trait IODesign extends DFDesign {
 
 ```scala
 trait IODesign1 extends DFDesign {
-  val i = DFUInt(8) <> IN
-  val o = DFUInt(8) <> OUT
-  val tmp = DFUInt(8)
+  val i = UInt(8) <> IN
+  val o = UInt(8) <> OUT
+  val tmp = UInt(8)
   tmp <> i
   o <> tmp
 }
@@ -346,10 +346,10 @@ trait IODesign1 extends DFDesign {
 
 ```scala
 trait IODesign2 extends DFDesign {
-  val i1 = DFUInt(8) <> IN
-  val o1 = DFUInt(8) <> OUT
-  val i2 = DFUInt(8) <> IN
-  val o2 = DFUInt(8) <> OUT
+  val i1 = UInt(8) <> IN
+  val o1 = UInt(8) <> OUT
+  val i2 = UInt(8) <> IN
+  val o2 = UInt(8) <> OUT
   o1 <> i1
   o2 <> i2
 }
@@ -361,8 +361,8 @@ trait IODesign2 extends DFDesign {
 
 ```scala
 trait Container extends DFDesign {
-  val i = DFUInt(8) <> IN
-  val o = DFUInt(8) <> OUT
+  val i = UInt(8) <> IN
+  val o = UInt(8) <> OUT
   val io = new IODesign {}
   i    <> io.i //Connecting between owner input and child input
   io.o <> o    //Connecting between child output and owner output
@@ -375,8 +375,8 @@ trait Container extends DFDesign {
 
 ```scala
 trait Container2 extends DFDesign {
-  val i = DFUInt(8) <> IN
-  val o = DFUInt(8) <> OUT
+  val i = UInt(8) <> IN
+  val o = UInt(8) <> OUT
   val io1 = new IODesign {}
   val io2 = new IODesign {}
   i     <> io1.i //Connecting between owner input and child input
@@ -391,8 +391,8 @@ trait Container2 extends DFDesign {
 
 ```scala
 trait Container3 extends DFDesign {
-  val i = DFUInt(8) <> IN
-  val o = DFUInt(8) <> OUT
+  val i = UInt(8) <> IN
+  val o = UInt(8) <> OUT
   val io = new IODesign2 {}
   i <> io.i1 //Connecting between owner input and child input
   i <> io.i2 //Connecting between owner input and child input
@@ -406,8 +406,8 @@ trait Container3 extends DFDesign {
 
 ```scala
 trait Container4 extends DFDesign {
-  val i = DFUInt(8) <> IN
-  val o = DFUInt(8) <> OUT
+  val i = UInt(8) <> IN
+  val o = UInt(8) <> OUT
   val io = new IODesign2 {}
   i     <> io.i1 //Connecting between owner input and child input
   io.i2 <> 5     //Connecting between constant value and child input
@@ -421,14 +421,14 @@ trait Container4 extends DFDesign {
 
 ```scala
 trait Blank2 extends DFDesign {
-  val i1 = DFUInt(8) <> IN
-  val o1 = DFUInt(8) <> OUT
-  val i2 = DFUInt(8) <> IN
-  val o2 = DFUInt(8) <> OUT    
+  val i1 = UInt(8) <> IN
+  val o1 = UInt(8) <> OUT
+  val i2 = UInt(8) <> IN
+  val o2 = UInt(8) <> OUT    
 }
 trait Container5 extends DFDesign {
-  val i = DFUInt(8) <> IN
-  val o = DFUInt(8) <> OUT
+  val i = UInt(8) <> IN
+  val o = UInt(8) <> OUT
   val io = new Blank2 {
     o1 <> i1 //Assignment
     o2 <> i2 //Internal connection   

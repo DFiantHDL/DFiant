@@ -1,4 +1,4 @@
-import DFiant._
+import dfhdl._
 
 @df class Conc extends DFDesign {
   val i, j      = UInt(32) <> IN
