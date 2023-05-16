@@ -131,7 +131,7 @@ object analysis {
     def anyCaseContains(member : DFMember) : Boolean = caseOwnerOf(member).isDefined
     //gets all the assignments within the match statement (at any level)
     def getAssignments : Iterable[DFNet] = {
-      getSet.designDB.members.toIterable
+      getSet.designDB.members.view
         .dropWhile(_ != mh).drop(1) //reaching the match header
         .takeWhile(anyCaseContains) //taking all case members
         .collect{case n : DFNet if n.isAssignment => n} //collecting assigned values

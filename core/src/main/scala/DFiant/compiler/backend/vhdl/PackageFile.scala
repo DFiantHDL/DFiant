@@ -32,7 +32,7 @@ object PackageFile {
        |${helperFunctionsBody.delim()}
        |${enumBodyDcl.delim()}
        |end package body $name;
-       |""".stripMargin.colorWords(kwWords, KW).colorWords(tpWords, TP).colorWords(fnWords, FN).formatted
+       |""".stripMargin.colorWords(kwWords, KW).colorWords(tpWords, TP).colorWords(fnWords, FN).hformatted
   }
   def Name()(implicit printer: Printer) : String = s"${printer.getSet.designDB.top.designType}_pkg"
 

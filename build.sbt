@@ -21,7 +21,7 @@ ThisBuild / resolvers += "scala-integration" at
 
 //resolvers in ThisBuild += "Oscar Snapshots" at "http://artifactory.info.ucl.ac.be/artifactory/libs-snapshot/"
 
-version in ThisBuild := "0.1.3-SNAPSHOT"
+ThisBuild / version := "0.1.4-SNAPSHOT"
 //enablePlugins(ScalaJSPlugin)
 
 // PROJECTS

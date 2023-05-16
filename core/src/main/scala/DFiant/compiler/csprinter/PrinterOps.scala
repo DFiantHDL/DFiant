@@ -87,7 +87,7 @@ final class PrinterOps[D <: DFDesign, C](c : C)(implicit conv : C => Compilation
         Some(designBlockCodeString(block, members))
       case _ => None
     }
-    (globalEnumString ++ codeStringList).mkString(s"\n$EMPTY\n").formatted
+    (globalEnumString ++ codeStringList).mkString(s"\n$EMPTY\n").hformatted
   }
 
   /**

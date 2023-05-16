@@ -11,7 +11,7 @@ private object File {
        |$EMPTY
        |$localDefs
        |$EMPTY
-       |$module""".stripMargin.formatted
+       |$module""".stripMargin.hformatted
   }
 }
 

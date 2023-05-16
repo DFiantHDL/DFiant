@@ -10,7 +10,7 @@ private object File {
        |$EMPTY
        |$entity
        |$EMPTY
-       |$architecture""".stripMargin.formatted
+       |$architecture""".stripMargin.hformatted
   }
 }
 

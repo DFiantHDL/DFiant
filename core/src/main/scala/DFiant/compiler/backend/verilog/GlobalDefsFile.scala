@@ -10,7 +10,7 @@ object GlobalDefsFile {
     s"""$FN`ifndef $defName
        |$FN`define $defName
        |$enumDcl
-       |$FN`endif""".stripMargin.formatted
+       |$FN`endif""".stripMargin.hformatted
   }
   def Name()(implicit printer: Printer) : String = s"${printer.getSet.designDB.top.designType}_defs"
   private def enumDcl(implicit printer: Printer) : String =
