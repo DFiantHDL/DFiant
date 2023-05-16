@@ -12,8 +12,8 @@ import singleton.ops._
   * @example
   * {{{
   *   @df class MemIfc extends DFInterface {
-  *     val addr = DFUInt(8) <> IN
-  *     val data = DFUInt(8) <> OUT
+  *     val addr = UInt(8) <> IN
+  *     val data = UInt(8) <> OUT
   *   }
   *   @df class DualPortMemIfc extends DFInterface {
   *     val portA = new MemIfc

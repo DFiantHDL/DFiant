@@ -18,8 +18,8 @@
 import DFiant._
 
 object Point extends DFStruct.Fields {
-  val x = DFUInt(8) <> FIELD
-  val y = DFUInt(8) <> FIELD
+  val x = UInt(8) <> FIELD
+  val y = UInt(8) <> FIELD
 }
 
 object Line extends DFStruct.Fields {
@@ -39,11 +39,11 @@ object Line extends DFStruct.Fields {
   line.endPoint.y := line.endPoint.y.prev + LINE_SIZE
 }
 
-@df object Active extends DFOpaque.Of((DFUInt(9), DFUInt(9)))
+@df object Active extends DFOpaque.Of((UInt(9), UInt(9)))
 @df class Simple extends DFDesign {
-  val a = (DFUInt(8), (DFBits(8), DFBits(8)), DFSInt(8)) <> IN init (0, (b0s, b1s), -3)
-  val b = (DFUInt(8), (DFBits(8), DFBits(8)), DFSInt(8)) <> OUT
-  val c = DFUInt(9) <> OUT
+  val a = (UInt(8), (Bits(8), Bits(8)), SInt(8)) <> IN init (0, (b0s, b1s), -3)
+  val b = (UInt(8), (Bits(8), Bits(8)), SInt(8)) <> OUT
+  val c = UInt(9) <> OUT
   val d = Active <> OUT init Active((5, 5))
   d := Active((5, 5))
   b <> a.prev

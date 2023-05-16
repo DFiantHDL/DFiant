@@ -9,8 +9,8 @@ class ParityCheckSpec extends DFTopSpec {
        |  object fsm_states extends DFEnum.Auto {
        |    val Even,Odd = Entry()
        |  }
-       |  val seqIn     = DFBit      <> IN
-       |  val detOut    = DFBit      <> OUT
+       |  val seqIn     = Bit      <> IN
+       |  val detOut    = Bit      <> OUT
        |  val fsm_state = fsm_states <> VAR init fsm_states.Even
        |  matchdf(fsm_state)
        |  .casedf(fsm_states.Even) {

@@ -30,7 +30,7 @@ private object Case {
       def apply(pattern : DFAny.Pattern, width : Int)(implicit printer : Printer) : String = {
         import printer.config._
         pattern match {
-          case x : DFBits.Pattern =>
+          case x : Bits.Pattern =>
             x.patternSet.map{p => Value.const(p)}.mkString(",")
           case x : DFDecimal.Pattern if !x.dfType.signed.getValue && x.dfType.fractionWidth.getValue == 0 =>
             x.patternSet.map(p => p.toRange.map(v => s"$LIT${width}'$LIT d${v}").mkString(",")).mkString(",")
@@ -39,7 +39,7 @@ private object Case {
               case v if v >= 0 => s"$LIT${width}'$LIT d${v}"
               case v if v < 0 => s"$LIT-${width}s'$LIT d${-v}"
             }.mkString(",")).mkString(",")
-          case x : DFBool.Pattern =>
+          case x : Bool.Pattern =>
             x.patternSet.map(p => if (p) s"$LIT 1" else s"$LIT 0").mkString(",")
           case x : DFEnum.Pattern =>
             x.patternSet.map(p => EnumEntriesDcl.enumEntryRefName(p)).mkString(",")

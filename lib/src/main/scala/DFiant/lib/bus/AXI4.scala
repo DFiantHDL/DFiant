@@ -52,10 +52,10 @@ object AXI4 {
   final val SRW = AXI4(Config(rdEnabled = true, wrEnabled = true, simple = true))
 
   trait Fire {
-    val valid : DFBool <> VAR
-    val ready : DFBool <> VAR
+    val valid : Bool <> VAR
+    val ready : Bool <> VAR
     @df final def fireFSM : FSM = FSM {
-      val ctrl = DFBit <> VAR init 0
+      val ctrl = Bit <> VAR init 0
       ctrl := 1
       ifdf(!ctrl.prev) {
         ctrl := ready
@@ -87,17 +87,17 @@ object AXI4 {
   ) extends Product with Serializable
 
   @df final protected class AddressChannel(streamDir : StreamDir) extends Interface(streamDir) with Fire {
-    final val addr    = DFBits(32)  <> DEFAULT_DIR init b0s
-    final val id      = DFBits(1)   <> DEFAULT_DIR init b0s
-    final val len     = DFBits(32)  <> DEFAULT_DIR init b0s
-    final val size    = DFBits(3)   <> DEFAULT_DIR init b0s
-    final val burst   = DFBits(2)   <> DEFAULT_DIR init b0s
-    final val lock    = DFBits(2)   <> DEFAULT_DIR init b0s
-    final val cache   = DFBits(4)   <> DEFAULT_DIR init b0s
-    final val prot    = DFBits(3)   <> DEFAULT_DIR init b0s
-    final val qos     = DFBits(4)   <> DEFAULT_DIR init b0s
-    final val region  = DFBits(4)   <> DEFAULT_DIR init b0s
-    final val user    = DFBits(1)   <> DEFAULT_DIR init b0s
+    final val addr    = Bits(32)  <> DEFAULT_DIR init b0s
+    final val id      = Bits(1)   <> DEFAULT_DIR init b0s
+    final val len     = Bits(32)  <> DEFAULT_DIR init b0s
+    final val size    = Bits(3)   <> DEFAULT_DIR init b0s
+    final val burst   = Bits(2)   <> DEFAULT_DIR init b0s
+    final val lock    = Bits(2)   <> DEFAULT_DIR init b0s
+    final val cache   = Bits(4)   <> DEFAULT_DIR init b0s
+    final val prot    = Bits(3)   <> DEFAULT_DIR init b0s
+    final val qos     = Bits(4)   <> DEFAULT_DIR init b0s
+    final val region  = Bits(4)   <> DEFAULT_DIR init b0s
+    final val user    = Bits(1)   <> DEFAULT_DIR init b0s
     streamDir match {
       case SOURCE =>
         if (hasNativeDir) {
@@ -107,11 +107,11 @@ object AXI4 {
     }
   }
   @df final protected class WriteDataChannel(streamDir : StreamDir) extends Interface(streamDir) with Fire {
-    final val data    = DFBits(32)  <> DEFAULT_DIR init b0s
-    final val strb    = DFBits(4)   <> DEFAULT_DIR init b0s
-    final val last    = DFBit       <> DEFAULT_DIR init 0
-    final val id      = DFBits(1)   <> DEFAULT_DIR init b0s
-    final val user    = DFBits(1)   <> DEFAULT_DIR init b0s
+    final val data    = Bits(32)  <> DEFAULT_DIR init b0s
+    final val strb    = Bits(4)   <> DEFAULT_DIR init b0s
+    final val last    = Bit       <> DEFAULT_DIR init 0
+    final val id      = Bits(1)   <> DEFAULT_DIR init b0s
+    final val user    = Bits(1)   <> DEFAULT_DIR init b0s
     streamDir match {
       case SOURCE =>
         if (hasNativeDir) {
@@ -121,9 +121,9 @@ object AXI4 {
     }
   }
   @df final protected class WriteResponseChannel(streamDir : StreamDir) extends Interface(streamDir) {
-    final val resp    = DFBits(2)   <> DEFAULT_DIR init b0s
-    final val id      = DFBits(1)   <> DEFAULT_DIR init b0s
-    final val user    = DFBits(1)   <> DEFAULT_DIR init b0s
+    final val resp    = Bits(2)   <> DEFAULT_DIR init b0s
+    final val id      = Bits(1)   <> DEFAULT_DIR init b0s
+    final val user    = Bits(1)   <> DEFAULT_DIR init b0s
     streamDir match {
       case SINK =>
         if (hasNativeDir) {
@@ -133,11 +133,11 @@ object AXI4 {
     }
   }
   @df final protected class ReadDataChannel(streamDir : StreamDir) extends Interface(streamDir) {
-    final val data    = DFBits(32)  <> DEFAULT_DIR init b0s
-    final val last    = DFBit       <> DEFAULT_DIR init 0
-    final val id      = DFBits(1)   <> DEFAULT_DIR init b0s
-    final val user    = DFBits(1)   <> DEFAULT_DIR init b0s
-    final val resp    = DFBits(2)   <> DEFAULT_DIR init b0s
+    final val data    = Bits(32)  <> DEFAULT_DIR init b0s
+    final val last    = Bit       <> DEFAULT_DIR init 0
+    final val id      = Bits(1)   <> DEFAULT_DIR init b0s
+    final val user    = Bits(1)   <> DEFAULT_DIR init b0s
+    final val resp    = Bits(2)   <> DEFAULT_DIR init b0s
     streamDir match {
       case SINK =>
         if (hasNativeDir) {

@@ -17,19 +17,19 @@
 //
 //import DFiant._
 //
-//class PortArgDesign(val ti : DFUInt[8] <> IN, val to : DFUInt[8] <> OUT)(implicit ctx : DFDesign.ContextOf[PortArgDesign]) extends DFDesign {
+//class PortArgDesign(val ti : UInt[8] <> IN, val to : UInt[8] <> OUT)(implicit ctx : DFDesign.ContextOf[PortArgDesign]) extends DFDesign {
 //  val padInt = new PortArgDesignInt(ti, to)
 //}
 //
-//class PortArgDesignInt(val ti : DFUInt[8] <> IN, val to : DFUInt[8] <> OUT)(implicit ctx : DFDesign.ContextOf[PortArgDesignInt]) extends DFDesign {
+//class PortArgDesignInt(val ti : UInt[8] <> IN, val to : UInt[8] <> OUT)(implicit ctx : DFDesign.ContextOf[PortArgDesignInt]) extends DFDesign {
 //  to <> ti + ti//.bits.uint
 //}
 //
 //trait PortArgTest extends DFDesign {
-//  val i = DFUInt(8) <> IN
-//  val o = DFUInt(8) <> OUT
+//  val i = UInt(8) <> IN
+//  val o = UInt(8) <> OUT
 //
-//  val temp = DFUInt(8)
+//  val temp = UInt(8)
 //  val io1 = new PortArgDesign(i, temp) {}
 //  val io2 = new PortArgDesign(temp, o) {}
 //}

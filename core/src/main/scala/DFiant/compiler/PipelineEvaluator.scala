@@ -42,7 +42,7 @@ class PipelineEvaluator(
           case SourceVersion.Latest =>
             dcl.getSource.evaluate(dcl.dfType)
           case SourceVersion.IfElse(_, branchVersions, fallbackVersion) =>
-            val branchInfos = branchVersions.map(bv => (bv._1.evaluate(DFBool.Type(true)), dcl.evaluate(bv._2)))
+            val branchInfos = branchVersions.map(bv => (bv._1.evaluate(Bool.Type(true)), dcl.evaluate(bv._2)))
             val fallBackInfo = dcl.evaluate(fallbackVersion)
             PipelineInfo.IfElse(dcl.width, branchInfos, fallBackInfo)
           case SourceVersion.Match(headCase, caseVersions, fallbackVersionOption) => ???
@@ -265,8 +265,8 @@ object PipelineEvaluator {
         case Op./ =>
           val isPowerOfTwo = {
             val intValue = func2.rightArgRef.get match {
-              case DFAny.Const(_,DFUInt.Token(_,value),_,_) => value
-              case DFAny.Const(_,DFSInt.Token(_,value),_,_) => value
+              case DFAny.Const(_,UInt.Token(_,value),_,_) => value
+              case DFAny.Const(_,SInt.Token(_,value),_,_) => value
               case _ => None
             }
             intValue.exists(v => (v & (v - 1)) == 0)

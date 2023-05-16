@@ -8,10 +8,10 @@ import DFiant.internals.Exact
   * DFiant integrates with ompss via the kernel interface.
   */
 @df class AP_Interface extends DFInterface {
-  final val start   = DFBit <> IN
-  final val done    = DFBit <> OUT
-  final val idle    = DFBit <> OUT
-  final val ready   = DFBit <> OUT
+  final val start   = Bit <> IN
+  final val done    = Bit <> OUT
+  final val idle    = Bit <> OUT
+  final val ready   = Bit <> OUT
 
   /**
     * Use to start an FSM that handles a kernel run.
@@ -34,7 +34,7 @@ import DFiant.internals.Exact
     * @return an FSM with a dangling edge to completes the kernel run.
     *         This should be connected to the initial FSM step that was created with [[startFSM]].
     */
-  @df def finishFSM[C](cond: => Exact[C])(implicit arg: DFBool.Arg[C]) : FSM = FSM {
+  @df def finishFSM[C](cond: => Exact[C])(implicit arg: Bool.Arg[C]) : FSM = FSM {
     ifdf (cond) {
       done := 1
       ready := 1

@@ -14,7 +14,7 @@ package object sim {
   }
 
   def assert[C, M](cond : Exact[C], msg : M, severity : Severity = Warning)(
-    implicit ctx : DFAny.Context, m : M => Message, condArg : DFBool.Arg[C]
+    implicit ctx : DFAny.Context, m : M => Message, condArg : Bool.Arg[C]
   ) : FSM.Capable = {
     if (inSimulation) Assert(Some(condArg(cond)), m(msg), severity) else new FSM.Capable {}
   }

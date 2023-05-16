@@ -13,14 +13,14 @@ where the code is compiled to RTL.
 
 For example:
   trait ID extends DFDesign {
-    val i = DFUInt(8) <> IN
-    val o = DFUInt(8) <> OUT
+    val i = UInt(8) <> IN
+    val o = UInt(8) <> OUT
     o <> i
   }
 
   trait IDTop extends DFDesign {
-    val x = DFUInt(8) <> IN
-    val y = DFUInt(8) <> OUT
+    val x = UInt(8) <> IN
+    val y = UInt(8) <> OUT
     val id1 = new ID {}
     val id2 = new ID {}
     id1.i <> x
@@ -30,16 +30,16 @@ For example:
 
   Will become:
   trait IDTop extends DFDesign {
-    final val x = DFUInt(8) <> IN
-    final val y = DFUInt(8) <> OUT
-    final val id1_i = DFUInt(8)
-    final val id1_o = DFUInt(8)
+    final val x = UInt(8) <> IN
+    final val y = UInt(8) <> OUT
+    final val id1_i = UInt(8)
+    final val id1_o = UInt(8)
     final val id1 = new ID {
       i <> id1_i
       id1_o <> o
     }
-    final val id2_i = DFUInt(8)
-    final val id2_o = DFUInt(8)
+    final val id2_i = UInt(8)
+    final val id2_o = UInt(8)
     final val id2 = new ID {
       i <> id2_i
       id2_o <> o

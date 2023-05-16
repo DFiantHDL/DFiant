@@ -6,14 +6,14 @@ class IDTopSpec extends DFTopSpec {
 
   val expectedCodeString : String =
     """|@df final class ID extends DFDesign {
-       |  val x   = DFSInt(16) <> IN
-       |  val y   = DFSInt(16) <> OUT
+       |  val x   = SInt(16) <> IN
+       |  val y   = SInt(16) <> OUT
        |  y       := x
        |}
        |
        |@df final class IDTop extends DFDesign {
-       |  val x   = DFSInt(16) <> IN
-       |  val y   = DFSInt(16) <> OUT
+       |  val x   = SInt(16) <> IN
+       |  val y   = SInt(16) <> OUT
        |  val id1 = new ID {}
        |  val id2 = new ID {}
        |  id1.x   <> x

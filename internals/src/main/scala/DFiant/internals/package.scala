@@ -314,12 +314,12 @@ package object internals {
 
   object BitsWidth extends Checked0Param.Int {
     type Cond[W] = (W > 0)
-    type Msg[W] = "DFBits/DFUInt width must be positive.\nFound width = " + ToString[W]
+    type Msg[W] = "Bits/UInt width must be positive.\nFound width = " + ToString[W]
   }
 
   object SIntWidth extends Checked0Param.Int {
     type Cond[W] = (W > 1)
-    type Msg[W] = "DFSInt width must be 2 or larger.\nFound width = " + ToString[W]
+    type Msg[W] = "SInt width must be 2 or larger.\nFound width = " + ToString[W]
   }
 
   object Positive extends Checked0Param.Int {

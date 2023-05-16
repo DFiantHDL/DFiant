@@ -21,16 +21,16 @@ import lib.sequential._
 @df class matmulBlock extends DFDesign {
   final val io = new matmulBlock_ifc
   import io._
-  final val cntBSize = DFUInt.until(BSIZE) <> VAR init 0
+  final val cntBSize = UInt.until(BSIZE) <> VAR init 0
   final val cntHBSize = cntBSize.resize(cntBSize.width-1)
   final val cntQBSize = cntHBSize.resize(cntHBSize.width-1)
-  final val cnt32x8 = DFUInt.until(32) <> VAR init 0
-  final val cnt16xcnt32x8 = DFUInt.until(BSIZE) <> VAR init 0
-  final val aData = DFBits(32) <> VAR := ?
-  final val bData = DFBits(32) <> VAR := ?
-  final val cData = DFBits(32) <> VAR := ?
-  final val dataValid = DFBit <> VAR init 0 := 0
-  final val cWriteDone = DFBit <> VAR init 0 := 0
+  final val cnt32x8 = UInt.until(32) <> VAR init 0
+  final val cnt16xcnt32x8 = UInt.until(BSIZE) <> VAR init 0
+  final val aData = Bits(32) <> VAR := ?
+  final val bData = Bits(32) <> VAR := ?
+  final val cData = Bits(32) <> VAR := ?
+  final val dataValid = Bit <> VAR init 0 := 0
+  final val cWriteDone = Bit <> VAR init 0 := 0
 
   //it's useful to disable by default, and create temporary changes within the FSM
   a.disable()
@@ -84,16 +84,16 @@ import lib.sequential._
 //@df class matmulBlock4 extends DFDesign {
 //  final val io = new matmulBlock_ifc
 //  import io._
-//  final val cnt16 = DFUInt.until(BSIZE) <> VAR init 0
+//  final val cnt16 = UInt.until(BSIZE) <> VAR init 0
 //  final val cnt8 = cnt16.resize(3)
 //  final val cnt4 = cnt8.resize(2)
-//  final val cnt32x8 = DFUInt.until(32) <> VAR init 0
-//  final val cnt16xcnt32x8 = DFUInt.until(BSIZE) <> VAR init 0
-//  final val aData = Vector.fill(4)(DFBits(32) <> VAR := ?)
-//  final val bData = Vector.fill(4)(DFBits(32) <> VAR := ?)
-//  final val cData = DFBits(32) <> VAR := ?
-//  final val dataValid = DFBit <> VAR init 0 := 0
-//  final val cWriteDone = DFBit <> VAR init 0 := 0
+//  final val cnt32x8 = UInt.until(32) <> VAR init 0
+//  final val cnt16xcnt32x8 = UInt.until(BSIZE) <> VAR init 0
+//  final val aData = Vector.fill(4)(Bits(32) <> VAR := ?)
+//  final val bData = Vector.fill(4)(Bits(32) <> VAR := ?)
+//  final val cData = Bits(32) <> VAR := ?
+//  final val dataValid = Bit <> VAR init 0 := 0
+//  final val cWriteDone = Bit <> VAR init 0 := 0
 //
 //  //it's useful to disable by default, and create temporary changes within the FSM
 //  a.disable()
@@ -176,9 +176,9 @@ object matmulBlock {
         yield for(col <- that.transpose)
           yield row zip col map Function.tupled(_*_) reduceLeft (_+_)
     }
-    def getPartition(factor : Int, idx : Int) : Vector[DFBits.Token] =
+    def getPartition(factor : Int, idx : Int) : Vector[Bits.Token] =
       matrix.view.flatten.zipWithIndex
-        .collect{case i if i._2 % factor == idx => DFBits.Token(32, i._1)}.toVector
+        .collect{case i if i._2 % factor == idx => Bits.Token(32, i._1)}.toVector
   }
 }
 
@@ -189,7 +189,7 @@ object matmulBlock {
   final val io = new matmulBlock_ifc <> FLIP
   import io._
   import lib.sequential._
-  private val resultOK = DFBool <> VAR := true
+  private val resultOK = Bool <> VAR := true
   private val ap_drv_fsm : FSM =
     {
       ap.start := 0
@@ -200,7 +200,7 @@ object matmulBlock {
     } ==> waitForever()
 
 
-  val cycle = DFUInt(32) <> VAR init 0
+  val cycle = UInt(32) <> VAR init 0
   cycle := cycle + 1
   println("a:")
   private val aMatrix = Matrix.genRandomFixedSeed(15L)
@@ -218,9 +218,9 @@ object matmulBlock {
   sim.assert(c.partitions.map(_.address).allAreEqual, msg"unexpected partition mismatch", sim.Failure)
 
   private val aDebug = a.partitions.map { p =>
-    val aMemArr = DFBits(32).X(SIZE / p.factor) <> VAR init aMatrix.getPartition(p.factor, p.idx)
+    val aMemArr = Bits(32).X(SIZE / p.factor) <> VAR init aMatrix.getPartition(p.factor, p.idx)
     aMemArr := aMemArr.prev
-    val q = DFBits(32) <> VAR init b0s
+    val q = Bits(32) <> VAR init b0s
     p.q := q.prev
     ifdf(p.ce) {
       q := aMemArr(p.address.uint)
@@ -234,9 +234,9 @@ object matmulBlock {
   }
 
   private val bDebug = b.partitions.map { p =>
-    val bMemArr = DFBits(32).X(SIZE / p.factor) <> VAR init bMatrix.getPartition(p.factor, p.idx)
+    val bMemArr = Bits(32).X(SIZE / p.factor) <> VAR init bMatrix.getPartition(p.factor, p.idx)
     bMemArr := bMemArr.prev
-    val q = DFBits(32) <> VAR init b0s
+    val q = Bits(32) <> VAR init b0s
     p.q := q.prev
     ifdf(p.ce) {
       q := bMemArr(p.address.uint)
@@ -250,9 +250,9 @@ object matmulBlock {
   }
 
   val cDebug = c.partitions.map { p =>
-    val cMemArr = DFBits(32).X(SIZE / p.factor) <> VAR init Vector.fill(32)(b0s)
+    val cMemArr = Bits(32).X(SIZE / p.factor) <> VAR init Vector.fill(32)(b0s)
     cMemArr := cMemArr.prev
-    val q = DFBits(32) <> VAR init b0s
+    val q = Bits(32) <> VAR init b0s
     p.q := q.prev
     ifdf(p.ce) {
       ifdf(p.we) {
@@ -262,7 +262,7 @@ object matmulBlock {
       }
       q := cMemArr(p.address.uint)
     }
-    val cMemArrRef = DFBits(32).X(SIZE / p.factor) <> VAR init cMatrix.getPartition(p.factor, p.idx)
+    val cMemArrRef = Bits(32).X(SIZE / p.factor) <> VAR init cMatrix.getPartition(p.factor, p.idx)
     cMemArrRef := cMemArrRef.prev
 
     ifdf(ap.ready) {

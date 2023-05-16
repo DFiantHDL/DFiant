@@ -21,13 +21,13 @@ private object Sim {
         case Left(v) =>
           val valueStr = Value.ref(v.get)
           v.get match {
-            case DFBits(w) if w % 4 == 0 => s"$FN to_hstring($valueStr)"
+            case Bits(w) if w % 4 == 0 => s"$FN to_hstring($valueStr)"
             case value => value match {
-              case DFBits(_) => s"$TP std_logic_vector'image($valueStr)"
-              case DFUInt(_) => s"$TP integer'image(to_integer($valueStr))"
-              case DFSInt(_) => s"$TP integer'image(to_integer($valueStr))"
-              case DFBool() => s"$TP boolean'image($valueStr)"
-              case DFBit() => s"$TP std_logic'image($valueStr)"
+              case Bits(_) => s"$TP std_logic_vector'image($valueStr)"
+              case UInt(_) => s"$TP integer'image(to_integer($valueStr))"
+              case SInt(_) => s"$TP integer'image(to_integer($valueStr))"
+              case Bool() => s"$TP boolean'image($valueStr)"
+              case Bit() => s"$TP std_logic'image($valueStr)"
               case DFEnum(entries) => s"${EnumEntriesDcl.tostrFuncName(entries)}($valueStr)"
             }
           }

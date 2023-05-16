@@ -45,10 +45,10 @@ object ConstEvaluator extends ElementEvaluator[DFAny.Token] {
           case SourceVersion.IfElse(_, branchVersions, fallbackVersion) =>
             val fallBackToken = dcl.evaluate(fallbackVersion)
             val ifElseToken = branchVersions.foldRight(fallBackToken){ case ((condSrc, thenVersion), elseToken) =>
-              val condToken = condSrc.evaluate(DFBool.Type(true))
+              val condToken = condSrc.evaluate(Bool.Type(true))
               val thenToken = dcl.evaluate(thenVersion)
               condToken match {
-                case b : DFBool.Token => b.select(thenToken, elseToken)
+                case b : Bool.Token => b.select(thenToken, elseToken)
                 case _ => ??? //condition should always be boolean
               }
             }
@@ -76,8 +76,8 @@ object ConstEvaluator extends ElementEvaluator[DFAny.Token] {
           val relValConst = applySel.relValRef.evaluate
           val idxConst = applySel.idxRef.evaluate
           (relValConst, idxConst) match {
-            case (r : DFBits.Token, i : DFUInt.Token) => r.bit(i)
-            case (r : DFVector.Token, i : DFUInt.Token) => r.sel(i)
+            case (r : Bits.Token, i : UInt.Token) => r.bit(i)
+            case (r : DFVector.Token, i : UInt.Token) => r.sel(i)
           }
       }
       case x =>

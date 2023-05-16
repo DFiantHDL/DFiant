@@ -23,7 +23,7 @@ final class FixAnonymous[D <: DFDesign](c : IRCompilation[D]) {
           case _ => false
         }.groupBy(m => m.tags.meta.namePosition).flatMap {
           //In case an anonymous member got a name from its owner. For example:
-          //val ret = DFBits(8).ifdf(cond) {
+          //val ret = Bits(8).ifdf(cond) {
           //  i & i
           //}
           //The `i & i` function would also get the `ret` name just as the if block itself
@@ -31,7 +31,7 @@ final class FixAnonymous[D <: DFDesign](c : IRCompilation[D]) {
             gm
           case (_, gm) if (gm.length > 1) =>
             //In case an anonymous member was used as an argument to an owner. For example:
-            //val ret = DFBits(8).ifdf(i & i) {
+            //val ret = Bits(8).ifdf(i & i) {
             //}
             //The `i & i` function would also get the `ret` name just as the if block itself
             if (gm.collectFirst{case x : DFBlock => x}.isDefined)
@@ -41,7 +41,7 @@ final class FixAnonymous[D <: DFDesign](c : IRCompilation[D]) {
             //Only the final 'Or' operation would be considered for the name `ret`
             else gm.dropRight(1)
           //annoymizing the net for cases like:
-          //val x = DFUInt(8) := 0
+          //val x = UInt(8) := 0
           case (_, (net : DFNet) :: Nil) => List(net)
           case (_, (net : DFDesign.Control) :: Nil) => List(net)
           case _ => List()

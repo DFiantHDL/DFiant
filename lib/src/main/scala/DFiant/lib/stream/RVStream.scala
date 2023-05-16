@@ -13,9 +13,9 @@ abstract class RVStream(streamDir: StreamDir, nameFlatten: DFOwner.NameFlatten =
     }
     case FLOW => VAR
   }
-//  final val bubbleStall = DFBit <> MasterDir(OUT)  init false
-  final val valid       = DFBit <> SourceDir(OUT) init false
-  final val ready       = DFBit <> SourceDir(IN)  init false
+//  final val bubbleStall = Bit <> MasterDir(OUT)  init false
+  final val valid       = Bit <> SourceDir(OUT) init false
+  final val ready       = Bit <> SourceDir(IN)  init false
   DEFAULT_DIR <> SourceDir(OUT)
 }
 
@@ -56,32 +56,32 @@ object Stream {
 
 //object IOExample {
 //  @df class Regular extends DFDesign {
-//    final val i = DFUInt(8) <> IN
-//    final val o = DFUInt(8) <> OUT
+//    final val i = UInt(8) <> IN
+//    final val o = UInt(8) <> OUT
 //    o <> i
 //  }
 //
 //  @df class Stream extends DFDesign {
-//    final val i = DFUInt(8) <> SOURCE
-//    final val o = DFUInt(8) <> SINK
+//    final val i = UInt(8) <> SOURCE
+//    final val o = UInt(8) <> SINK
 //    o <> i
 //  }
 //}
 //
 //object IOPrevInitExample {
 //  @df class Regular extends DFDesign {
-//    final val i = DFUInt(8) <> IN init 7
-//    final val o = DFUInt(8) <> OUT
+//    final val i = UInt(8) <> IN init 7
+//    final val o = UInt(8) <> OUT
 //    o <> i.prev
 //  }
 //
 //  @df class Stream extends DFDesign {
-//    final val i = new DFStream(DFUInt.Type(8)) <> ASIS
-//    final val o = new DFStream(DFUInt.Type(8)) <> FLIP
-//    private val i_prev_payload = DFUInt(8) init 7 //init according to the init of i
-//    private val i_prev_bubbleStall = DFBit() init 0 //init 0 (no stall) iff i is initialized
-//    private val i_prev_valid = DFBit() init 1 //a prev will always be initialized valid
-//    private val i_prev_ready = DFBit() init 0//a prev will always be initialized ready
+//    final val i = new DFStream(UInt.Type(8)) <> ASIS
+//    final val o = new DFStream(UInt.Type(8)) <> FLIP
+//    private val i_prev_payload = UInt(8) init 7 //init according to the init of i
+//    private val i_prev_bubbleStall = Bit() init 0 //init 0 (no stall) iff i is initialized
+//    private val i_prev_valid = Bit() init 1 //a prev will always be initialized valid
+//    private val i_prev_ready = Bit() init 0//a prev will always be initialized ready
 //
 //    o.valid := i_prev_valid.prev
 //    o.payload := i_prev_payload.prev
@@ -101,20 +101,20 @@ object Stream {
 //
 //object CommulativeSumExample {
 //  @df class Regular extends DFDesign {
-//    final val i = DFUInt(8) <> IN
-//    final val o = DFUInt(8) <> OUT
-//    final val sum = DFUInt(8) init 0
+//    final val i = UInt(8) <> IN
+//    final val o = UInt(8) <> OUT
+//    final val sum = UInt(8) init 0
 //    sum := sum.prev + i
 //    o <> sum
 //  }
 //
 //  @df class Stream extends DFDesign {
-//    final val i = new DFStream(DFUInt.Type(8)) <> ASIS
-//    final val o = new DFStream(DFUInt.Type(8)) <> FLIP
-//    private val sum_payload = DFUInt(8) init 0
-//    private val sum_bubbleStall = DFBit() init 0
-//    private val sum_valid = DFBit() init 1
-//    private val sum_ready = DFBit() init 0
+//    final val i = new DFStream(UInt.Type(8)) <> ASIS
+//    final val o = new DFStream(UInt.Type(8)) <> FLIP
+//    private val sum_payload = UInt(8) init 0
+//    private val sum_bubbleStall = Bit() init 0
+//    private val sum_valid = Bit() init 1
+//    private val sum_ready = Bit() init 0
 //
 //    sum_payload := sum_payload.prev + i.payload
 //    sum_valid := sum_valid.prev && i.valid
@@ -142,15 +142,15 @@ object Stream {
 //
 //object GenConstExample {
 //  @df class Regular extends DFDesign {
-//    final val i = DFUInt(8) <> IN
-//    final val o = DFUInt(8) <> OUT
+//    final val i = UInt(8) <> IN
+//    final val o = UInt(8) <> OUT
 //    i.consume() //implicit
 //    o := 5
 //  }
 //
 //  @df class Stream extends DFDesign {
-//    final val i = new DFStream(DFUInt.Type(8)) <> ASIS
-//    final val o = new DFStream(DFUInt.Type(8)) <> FLIP
+//    final val i = new DFStream(UInt.Type(8)) <> ASIS
+//    final val o = new DFStream(UInt.Type(8)) <> FLIP
 //    i.ready := 1 //i.consume
 //    o.payload := 5
 //    o.valid := 1
@@ -161,16 +161,16 @@ object Stream {
 //
 //object JoinAddExample {
 //  @df class Regular extends DFDesign {
-//    final val iL = DFUInt(8) <> IN
-//    final val iR = DFUInt(8) <> IN
-//    final val o = DFUInt(8) <> OUT
+//    final val iL = UInt(8) <> IN
+//    final val iR = UInt(8) <> IN
+//    final val o = UInt(8) <> OUT
 //    o := iL + iR //has implicit join
 //  }
 //
 //  @df class Stream extends DFDesign {
-//    final val iL = new DFStream(DFUInt.Type(8)) <> ASIS
-//    final val iR = new DFStream(DFUInt.Type(8)) <> ASIS
-//    final val o = new DFStream(DFUInt.Type(8)) <> FLIP
+//    final val iL = new DFStream(UInt.Type(8)) <> ASIS
+//    final val iR = new DFStream(UInt.Type(8)) <> ASIS
+//    final val o = new DFStream(UInt.Type(8)) <> FLIP
 //    iL.ready := o.ready
 //    iR.ready := o.ready
 //    o.valid := iL.valid && iR.valid

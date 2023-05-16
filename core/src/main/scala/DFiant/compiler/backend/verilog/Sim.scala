@@ -44,12 +44,12 @@ private object Sim {
       val msg = assert.msgRef.seq.map {
         case Left(v) =>
           v.get match {
-            case DFBits(w) if w % 4 == 0 => s"0x%.${w / 4}H"
-            case DFBits(_) => s"%0b"
-            case DFUInt(_) => s"%0d"
-            case DFSInt(_) => s"%0d"
-            case DFBool() => s"%0d"
-            case DFBit() => s"%0d"
+            case Bits(w) if w % 4 == 0 => s"0x%.${w / 4}H"
+            case Bits(_) => s"%0b"
+            case UInt(_) => s"%0d"
+            case SInt(_) => s"%0d"
+            case Bool() => s"%0d"
+            case Bit() => s"%0d"
             case DFEnum(_) => s"%0s"
           }
         case Right(s) => s

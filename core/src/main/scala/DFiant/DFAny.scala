@@ -90,7 +90,7 @@ object DFAny {
     type TPatternAble[+R] <: DFAny.Pattern.Able[R]
     type TPatternBuilder[LType <: Type] <: DFAny.Pattern.Builder[LType, TPatternAble]
     def getBubbleToken : TToken
-    def getTokenFromBits(fromToken : DFBits.Token) : DFAny.Token
+    def getTokenFromBits(fromToken : Bits.Token) : DFAny.Token
     def assignCheck(from : DFAny.Member)(implicit ctx : DFAny.Context) : Unit
     def codeString(implicit printer: CSPrinter) : String
   }
@@ -105,8 +105,8 @@ object DFAny {
       }
       def <>(defaultDir : DEFAULT_DIR)(implicit ctx : DFAny.Context) : UninitializedDcl[Type] = dfType <> defaultDir.get
     }
-    implicit val __DFBoolType : DFBool.type => DFBool.Type = _ => DFBool.Type(true)
-    implicit val __DFBitType : DFBit.type => DFBool.Type = _ => DFBool.Type(false)
+    implicit val __BoolType : Bool.type => Bool.Type = _ => Bool.Type(true)
+    implicit val __BitType : Bit.type => Bool.Type = _ => Bool.Type(false)
     class Holder[T <: DFAny.Type, TT](t : TT)(implicit tc : TT => T) {
       type TType = T
       val dfType = tc(t)
@@ -123,7 +123,7 @@ object DFAny {
         implicit ctx : DFAny.Context
       ) : DFAny.Of[Type] = trydf{DFAny.Const(dfType, token(dfType), named = true)}
       def ifdf[C, B](cond : Exact[C])(block : => Exact[B])(
-        implicit ctx : DFBlock.Context, condArg : DFBool.Arg[C], blockConv : DFAny.`Op:=,<>`.Builder[Type, B]
+        implicit ctx : DFBlock.Context, condArg : Bool.Arg[C], blockConv : DFAny.`Op:=,<>`.Builder[Type, B]
       ) : DFConditional.WithRetVal.IfElseBlock[Type, true] = {
         val newMember = Dcl(dfType, Modifier.IfRetVar) setName ctx.meta.name //setting a RetVar modifier
         new DFConditional.WithRetVal.IfElseBlock[Type, true](newMember.asValModOf[Type, Modifier.NewVar], Some(condArg(cond)), None)(blockConv(dfType, block))
@@ -277,22 +277,22 @@ object DFAny {
         * @param relBit relative bit index. Must be within bound of [0 : width-1]
         * @return the dataflow bit at the given index
         */
-      final def bit[I](relBit : BitIndex.Checked[I, Width])(implicit ctx : DFAny.Context) : DFBool =
+      final def bit[I](relBit : BitIndex.Checked[I, Width])(implicit ctx : DFAny.Context) : Bool =
         trydf{DFAny.Alias.BitsWL.bit[Mod](member, relBit.unsafeCheck(width).getValue)}
 
       /**
         * @return the dataflow variable cast as bits vector
         */
-      final def bits(implicit ctx : DFAny.Context) : DFBits[Width] = member match {
+      final def bits(implicit ctx : DFAny.Context) : Bits[Width] = member match {
         case DFAny.Const(_, token, _, _) =>
-          DFAny.Const.forced(token.bits).asInstanceOf[DFBits[Width]]
+          DFAny.Const.forced(token.bits).asInstanceOf[Bits[Width]]
         case _ =>
           DFAny.Alias.BitsWL[Mod, Width](member, dfType.width, 0) tag cs"$left.bits"
       }
 
       final protected def protBits[H, L](relBitHigh : TwoFace.Int[H], relBitLow : TwoFace.Int[L])(
         implicit relWidth : RelWidth.TF[H, L], ctx : DFAny.Context
-      ) : DFBits[relWidth.Out] = trydf {
+      ) : Bits[relWidth.Out] = trydf {
         DFAny.Alias.BitsWL[Mod, relWidth.Out](member, relWidth(relBitHigh, relBitLow), relBitLow) tag
           cs"$left.bits(${CSFunc(_.LIT)}$relBitHigh, ${CSFunc(_.LIT)}$relBitLow)"
       }
@@ -309,15 +309,15 @@ object DFAny {
         */
       final def bits[H, L](relBitHigh : BitIndex.Checked[H, Width], relBitLow : BitIndex.Checked[L, Width])(
         implicit checkHiLow : BitsHiLo.CheckedShell[H, L], relWidth : RelWidth.TF[H, L], ctx : DFAny.Context
-      ) : DFBits[relWidth.Out] = trydf {
+      ) : Bits[relWidth.Out] = trydf {
         checkHiLow.unsafeCheck(relBitHigh, relBitLow)
         protBits(relBitHigh.unsafeCheck(width), relBitLow.unsafeCheck(width))
       }
 
       final protected def protBitsWL[W, L](relWidth : TwoFace.Int[W], relBitLow : TwoFace.Int[L])(
         implicit ctx : DFAny.Context
-      ) : DFBits[W] =
-        if (left.dfType == DFBits.Type(relWidth)) left.asValOf[DFBits.Type[W]]
+      ) : Bits[W] =
+        if (left.dfType == Bits.Type(relWidth)) left.asValOf[Bits.Type[W]]
         else DFAny.Alias.BitsWL[Mod, W](member, relWidth, relBitLow)
 
       /**
@@ -330,7 +330,7 @@ object DFAny {
         */
       final def bitsWL[W, L](relWidth : TwoFace.Int[W], relBitLow : BitIndex.Checked[L, Width])(
         implicit checkRelWidth : PartWidth.CheckedShell[W, Width - L], ctx : DFAny.Context
-      ) : DFBits[W] = trydf {
+      ) : Bits[W] = trydf {
         checkRelWidth.unsafeCheck(relWidth, width-relBitLow)
         protBitsWL(relWidth, relBitLow.unsafeCheck(width))
       }
@@ -414,8 +414,8 @@ object DFAny {
       //////////////////////////////////////////////////////////////////////////
       final def fork(implicit ctx : DFAny.Context) : Value[Type, Modifier.Fork] = Fork(left)
       //fired only once for each new token
-      final def isNotEmpty(implicit ctx : DFAny.Context) : DFBool = Dynamic.IsNotEmpty(left)
-      final def isNotStall(implicit ctx : DFAny.Context) : DFBool = Dynamic.IsNotStall(left)
+      final def isNotEmpty(implicit ctx : DFAny.Context) : Bool = Dynamic.IsNotEmpty(left)
+      final def isNotStall(implicit ctx : DFAny.Context) : Bool = Dynamic.IsNotStall(left)
       //////////////////////////////////////////////////////////////////////////
     }
   }
@@ -710,7 +710,7 @@ object DFAny {
       }
       def constFunc(t : DFAny.Token) : DFAny.Token = {
         if (t.dfType.width.getValue != dfType.width.getValue) t match {
-          case b : DFBits.Token => b.resize(dfType.width)
+          case b : Bits.Token => b.resize(dfType.width)
           case d @ DFDecimal.Token(_, width, fractionWidth, _) if fractionWidth == 0 => d.resize(dfType.width)
         } else dfType.getTokenFromBits(t.bits)
       }
@@ -744,14 +744,14 @@ object DFAny {
         case _ => false
       }
       def constFunc(t : DFAny.Token) : DFAny.Token = dfType match {
-        case _ : DFBits.Type[_] => t.bitsWL(relWidth, relBitLow)
-        case _ : DFBool.Type => t.bit(relBitLow)
+        case _ : Bits.Type[_] => t.bitsWL(relWidth, relBitLow)
+        case _ : Bool.Type => t.bit(relBitLow)
       }
       def relCodeString(cs : String)(implicit printer: CSPrinter) : String = {
         import printer.config._
         dfType match {
-          case _ : DFBits.Type[_] => s"$cs.$DF bitsWL($LIT$relWidth, $LIT$relBitLow)"
-          case _ : DFBool.Type => s"$cs.$DF bit($LIT$relBitLow)"
+          case _ : Bits.Type[_] => s"$cs.$DF bitsWL($LIT$relWidth, $LIT$relBitLow)"
+          case _ : Bool.Type => s"$cs.$DF bit($LIT$relBitLow)"
         }
       }
 
@@ -760,20 +760,20 @@ object DFAny {
     object BitsWL {
       def apply[RelValMod <: Modifier, W](relVal: DFAny.Member, relWidth: TwoFace.Int[W], relBitLow: Int)(
         implicit ctx: Context
-      ): Value[DFBits.Type[W], RelValMod] = {
-        implicit lazy val ret : Value[DFBits.Type[W], RelValMod] with DFMember.RefOwner =
+      ): Value[Bits.Type[W], RelValMod] = {
+        implicit lazy val ret : Value[Bits.Type[W], RelValMod] with DFMember.RefOwner =
           ctx.db.addMember(
-            BitsWL(DFBits.Type(relWidth), relVal.modifier, relVal, relWidth, relBitLow, ctx.owner, ctx.meta)
-          ).asRefOwner[DFBits.Type[W], RelValMod]
+            BitsWL(Bits.Type(relWidth), relVal.modifier, relVal, relWidth, relBitLow, ctx.owner, ctx.meta)
+          ).asRefOwner[Bits.Type[W], RelValMod]
         ret
       }
       def bit[RelValMod <: Modifier](relVal: DFAny.Member, relBit: Int)(
         implicit ctx: Context
-      ): Value[DFBool.Type, RelValMod] = {
-        implicit lazy val ret : Value[DFBool.Type, RelValMod] with DFMember.RefOwner =
+      ): Value[Bool.Type, RelValMod] = {
+        implicit lazy val ret : Value[Bool.Type, RelValMod] with DFMember.RefOwner =
           ctx.db.addMember(
-            BitsWL(DFBool.Type(logical = false), relVal.modifier, relVal, 1, relBit, ctx.owner, ctx.meta)
-          ).asRefOwner[DFBool.Type, RelValMod]
+            BitsWL(Bool.Type(logical = false), relVal.modifier, relVal, 1, relBit, ctx.owner, ctx.meta)
+          ).asRefOwner[Bool.Type, RelValMod]
         ret
       }
       object Unref {
@@ -867,13 +867,13 @@ object DFAny {
         ).asRefOwner[Type, Mod]
       ret
     }
-    def fromBits[W, Mod <: DFAny.Modifier](relVal: Value[DFBits.Type[W], Mod], idxVal: DFAny.Member)(
+    def fromBits[W, Mod <: DFAny.Modifier](relVal: Value[Bits.Type[W], Mod], idxVal: DFAny.Member)(
       implicit ctx: Context
-    ): Value[DFBool.Type, Mod] = {
-      implicit lazy val ret : Value[DFBool.Type, Mod] with DFMember.RefOwner =
+    ): Value[Bool.Type, Mod] = {
+      implicit lazy val ret : Value[Bool.Type, Mod] with DFMember.RefOwner =
         ctx.db.addMember(
-          ApplySel(DFBool.Type(logical = false), relVal.modifier, relVal.member, idxVal, ctx.owner, ctx.meta.anonymize)
-        ).asRefOwner[DFBool.Type, Mod]
+          ApplySel(Bool.Type(logical = false), relVal.modifier, relVal.member, idxVal, ctx.owner, ctx.meta.anonymize)
+        ).asRefOwner[Bool.Type, Mod]
       ret
     }
     object Unref {
@@ -884,7 +884,7 @@ object DFAny {
     }
     object ConstIdx {
       def unapply(arg : DFAny.Member) : Option[Int] = arg match {
-        case DFAny.Const(_, DFUInt.Token(_, Some(valueBig)),_,_) => Some(valueBig.toInt)
+        case DFAny.Const(_, UInt.Token(_, Some(valueBig)),_,_) => Some(valueBig.toInt)
         case _ => None
       }
     }
@@ -1149,7 +1149,7 @@ object DFAny {
     relValRef : Dynamic.Ref, func : Dynamic.Func, ownerRef : DFOwner.Ref, tags : DFMember.Tags
   ) extends DFAny.Member with CanBeAnonymous {
     val modifier : Modifier = Modifier.Val
-    val dfType : DFBool.Type = DFBool.Type(true)
+    val dfType : Bool.Type = Bool.Type(true)
     protected[DFiant] def =~(that : DFMember)(implicit getSet : MemberGetSet) : Boolean = that match {
       case Dynamic(relValRef, func, _, tags) =>
         this.func == func && this.relValRef =~ relValRef && this.tags =~ tags
@@ -1198,9 +1198,9 @@ object DFAny {
 
     def apply(relVal: DFAny.Member, func : Func)(
       implicit ctx: DFAny.Context
-    ): DFBool = {
-      implicit lazy val ret : DFBool with DFMember.RefOwner =
-        ctx.db.addMember(Dynamic(relVal, func, ctx.owner, ctx.meta)).asRefOwner[DFBool.Type, Modifier.Val]
+    ): Bool = {
+      implicit lazy val ret : Bool with DFMember.RefOwner =
+        ctx.db.addMember(Dynamic(relVal, func, ctx.owner, ctx.meta)).asRefOwner[Bool.Type, Modifier.Val]
       ret
     }
 
@@ -1211,7 +1211,7 @@ object DFAny {
         Some((arg.relValRef.get, arg.func, arg.ownerRef.get, arg.tags))
     }
     object IsNotEmpty {
-      def apply(relVal : DFAny.Member)(implicit ctx : DFAny.Context) : DFBool = Dynamic(relVal, Func.IsNotEmpty)
+      def apply(relVal : DFAny.Member)(implicit ctx : DFAny.Context) : Bool = Dynamic(relVal, Func.IsNotEmpty)
       def unapply(arg : Dynamic)(
         implicit getSet: MemberGetSet
       ) : Option[(DFAny.Member, DFOwner, DFMember.Tags)] = arg match {
@@ -1220,7 +1220,7 @@ object DFAny {
       }
     }
     object IsNotFull {
-      def apply(relVal : DFAny.Member)(implicit ctx : DFAny.Context) : DFBool = Dynamic(relVal, Func.IsNotFull)
+      def apply(relVal : DFAny.Member)(implicit ctx : DFAny.Context) : Bool = Dynamic(relVal, Func.IsNotFull)
       def unapply(arg : Dynamic)(
         implicit getSet: MemberGetSet
       ) : Option[(DFAny.Member, DFOwner, DFMember.Tags)] = arg match {
@@ -1229,7 +1229,7 @@ object DFAny {
       }
     }
     object IsNotStall {
-      def apply(relVal : DFAny.Member)(implicit ctx : DFAny.Context) : DFBool = Dynamic(relVal, Func.IsNotStall)
+      def apply(relVal : DFAny.Member)(implicit ctx : DFAny.Context) : Bool = Dynamic(relVal, Func.IsNotStall)
       def unapply(arg : Dynamic)(
         implicit getSet: MemberGetSet
       ) : Option[(DFAny.Member, DFOwner, DFMember.Tags)] = arg match {
@@ -1275,7 +1275,7 @@ object DFAny {
   type VarOf[Type <: DFAny.Type] = Value[Type, Modifier.Assignable]
   implicit class VarOps[Type <: DFAny.Type](left : DFAny.VarOf[Type]) {
     def dontProduce()(implicit ctx : DFAny.Context) : Unit = Dynamic.DontProduce(left)
-    final def isNotFull(implicit ctx : DFAny.Context) : DFBool = Dynamic.IsNotFull(left)
+    final def isNotFull(implicit ctx : DFAny.Context) : Bool = Dynamic.IsNotFull(left)
   }
 
   object In {
@@ -1434,22 +1434,22 @@ object DFAny {
     val valueBits : BitVector
     val dfType : DFAny.Type
     final def isBubble : Boolean = !(bubbleMask === BitVector.low(width))
-    final def bits : DFBits.Token = DFBits.Token(valueBits, bubbleMask)
-    final def bits(relBitHigh : Int, relBitLow : Int) : DFBits.Token =
+    final def bits : Bits.Token = Bits.Token(valueBits, bubbleMask)
+    final def bits(relBitHigh : Int, relBitLow : Int) : Bits.Token =
       bitsWL(relBitHigh - relBitLow + 1, relBitLow)
-    final def bit(relBit : Int) : DFBool.Token = {
+    final def bit(relBit : Int) : Bool.Token = {
       val outValueBits = valueBits.bit(relBit)
       val outBubbleMask = bubbleMask.bit(relBit)
-      if (outBubbleMask) DFBool.Token.bubble(logical = false)
-      else DFBool.Token(logical = false, outValueBits)
+      if (outBubbleMask) Bool.Token.bubble(logical = false)
+      else Bool.Token(logical = false, outValueBits)
     }
-    final def bitsWL[W](relWidth : TwoFace.Int[W], relBitLow : Int) : DFBits.TokenW[W] = {
+    final def bitsWL[W](relWidth : TwoFace.Int[W], relBitLow : Int) : Bits.TokenW[W] = {
       val outValueBits = valueBits.bitsWL(relWidth, relBitLow)
       val outBubbleMask = bubbleMask.bitsWL(relWidth, relBitLow)
-      DFBits.Token(outValueBits, outBubbleMask).asInstanceOf[DFBits.TokenW[W]]
+      Bits.Token(outValueBits, outBubbleMask).asInstanceOf[Bits.TokenW[W]]
     }
-    def ==(that : Token)(implicit bb : Bubble.Behaviour) : DFBool.Token
-    final def !=(that : Token)(implicit bb : Bubble.Behaviour) : DFBool.Token = !(this == that)
+    def ==(that : Token)(implicit bb : Bubble.Behaviour) : Bool.Token
+    final def !=(that : Token)(implicit bb : Bubble.Behaviour) : Bool.Token = !(this == that)
     def codeString(implicit printer: CSPrinter) : String
   }
   type TokenT[Token <: DFAny.Token, Type <: DFAny.Type] = Token with DFAny.TypeTag[Type]
@@ -1460,13 +1460,13 @@ object DFAny {
         case Some(t) => (valueToBitVector(t), false.toBitVector(width))
         case None => (0.toBitVector(width), true.toBitVector(width))
       }
-      final protected def mkTokenB(right : Of[Type, Value], f : (Value, Value) => Boolean) : DFBool.Token = {
+      final protected def mkTokenB(right : Of[Type, Value], f : (Value, Value) => Boolean) : Bool.Token = {
         (left.value, right.value) match {
-          case (Some(l), Some(r)) => DFBool.Token(logical = true, f(l, r))
-          case _ => DFBool.Token.bubble(logical = true)
+          case (Some(l), Some(r)) => Bool.Token(logical = true, f(l, r))
+          case _ => Bool.Token.bubble(logical = true)
         }
       }
-      final def == (right : Token)(implicit bb : Bubble.Behaviour) : DFBool.Token = right match {
+      final def == (right : Token)(implicit bb : Bubble.Behaviour) : Bool.Token = right match {
         case of : Of[Type @unchecked, Value @unchecked] => mkTokenB(of, _ == _)
         case _ => ???
       }
@@ -1485,9 +1485,9 @@ object DFAny {
     object AsIs extends ExactType[AsIs]
 
     trait Frontend extends
-      DFBits.Token.Frontend.Inherited with
+      Bits.Token.Frontend.Inherited with
       DFEnum.Token.Frontend.Inherited with
-      DFBool.Token.Frontend.Inherited with
+      Bool.Token.Frontend.Inherited with
       DFDecimal.Token.Frontend.Inherited with
       DFVector.Token.Frontend.Inherited with
       DFStruct.Token.Frontend.Inherited
@@ -1511,12 +1511,12 @@ object DFAny {
         //More tokens are available than the step size, so we drop the first, according to the step count
         else tokenSeq.drop(step)
       }
-      def bits : Seq[DFBits.Token] =
+      def bits : Seq[Bits.Token] =
         tokenSeq.map(t => t.bits)
-      def bitsWL(relWidth : Int, relBitLow : Int) : Seq[DFBits.Token] =
+      def bitsWL(relWidth : Int, relBitLow : Int) : Seq[Bits.Token] =
         tokenSeq.map(t => t.bitsWL(relWidth, relBitLow))
       def codeString(implicit printer: CSPrinter) : String = tokenSeq.map(t => t.codeString).mkString("(", ", ", ")")
-      //      def patternMatch(pattern : T#TPattern) : Seq[DFBool.Token] = TokenSeq(tokenSeq, pattern)((l, r) => l.patternMatch(r.asInstanceOf[l.TPattern]))
+      //      def patternMatch(pattern : T#TPattern) : Seq[Bool.Token] = TokenSeq(tokenSeq, pattern)((l, r) => l.patternMatch(r.asInstanceOf[l.TPattern]))
     }
   }
 
@@ -1549,7 +1549,7 @@ object DFAny {
     def matches(value : TValue) : Boolean
     protected[DFiant] def matchCond(matchVal : DFAny.Of[TType])(
       implicit ctx : DFAny.Context
-    ) : DFBool
+    ) : Bool
     def codeString(implicit printer: CSPrinter) : String
   }
   object Pattern {
@@ -1563,10 +1563,10 @@ object DFAny {
       type TValue = V
       protected def matchCond(matchVal: DFAny.Of[T], interval : Interval[V])(
         implicit ctx: DFAny.Context
-      ): DFBool
+      ): Bool
       final protected[DFiant] def matchCond(matchVal: DFAny.Of[T])(
         implicit ctx: DFAny.Context
-      ): DFBool = {
+      ): Bool = {
         import DFDesign.Frontend._
         patternSet.toList.map(matchCond(matchVal, _)).reduce(_ || _)
       }
@@ -1586,10 +1586,10 @@ object DFAny {
       type TValue = V
       protected def matchCond(matchVal: DFAny.Of[T], value : V)(
         implicit ctx: DFAny.Context
-      ): DFBool
+      ): Bool
       final protected[DFiant] def matchCond(matchVal: DFAny.Of[T])(
         implicit ctx: DFAny.Context
-      ): DFBool = {
+      ): Bool = {
         import DFDesign.Frontend._
         patternSet.toList.map(matchCond(matchVal, _)).reduce(_ || _)
       }
@@ -1641,7 +1641,7 @@ object DFAny {
   }
   object `Op==,!=` {
     @scala.annotation.implicitNotFound("Dataflow variable of type ${L} does not support in/equality operation with the type ${R}")
-    sealed trait Builder[-L, Op <: Func2.Op, -R] extends Op.Builder[L, R]{type Out = DFBool}
+    sealed trait Builder[-L, Op <: Func2.Op, -R] extends Op.Builder[L, R]{type Out = Bool}
     @scala.annotation.implicitNotFound("Dataflow variable of type ${LType} does not support in/equality operation with the type ${RType}")
     trait Capable[LType <: DFAny.Type, RType <: DFAny.Type] {
       def unsafeCheck(leftType : LType, rightType : RType) : Unit
@@ -1655,13 +1655,13 @@ object DFAny {
       (properLR : (L, R) => (DFAny.Of[LType], DFAny.Of[RType]))(
         implicit ctx : DFAny.Context, op : Op
       ) : Builder[L, Op, R] = new Builder[L, Op, R] {
-        def apply(leftL : L, rightR : R) : DFBool = trydf {
+        def apply(leftL : L, rightR : R) : Bool = trydf {
           val (left, right) = properLR(leftL, rightR)
-          val tokenFunc : (Token, Token) => DFBool.Token = op match {
+          val tokenFunc : (Token, Token) => Bool.Token = op match {
             case Func2.Op.== => _ == _
             case Func2.Op.!= => _ != _
           }
-          DFAny.Func2.forced(DFBool.Type(logical = true), left, op, right)(tokenFunc)
+          DFAny.Func2.forced(Bool.Type(logical = true), left, op, right)(tokenFunc)
         }
       }
       implicit def __Type_eq_ConstToFit[VType <: DFAny.Type, Op <: Func2.Op.Equality, R](

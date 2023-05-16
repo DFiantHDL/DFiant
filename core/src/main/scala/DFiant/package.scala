@@ -134,44 +134,44 @@ package object DFiant {
     *           argument holds a literal integer type representing it, otherwise, it holds `Int`.
     * @example
     * {{{
-    *   val a : DFBits[3]   //width is 3 bits
-    *   val b : DFBits[Int] //width isn't known at the Scala compile-time,
+    *   val a : Bits[3]   //width is 3 bits
+    *   val b : Bits[Int] //width isn't known at the Scala compile-time,
     *                       //and checked during DFiant compilation
     * }}}
     */
-  type DFBits[W] = DFAny.Of[DFBits.Type[W]]
+  type Bits[W] = DFAny.Of[Bits.Type[W]]
   /**
-    * Dataflow Boolean (equivalent to DFBit)
+    * Dataflow Boolean (equivalent to Bit)
     */
-  type DFBool = DFAny.Of[DFBool.Type]
+  type Bool = DFAny.Of[Bool.Type]
   /**
-    * Dataflow Bit (equivalent to DFBool)
+    * Dataflow Bit (equivalent to Bool)
     */
-  type DFBit = DFAny.Of[DFBit.Type]
+  type Bit = DFAny.Of[Bit.Type]
   /**
     * Dataflow Unsigned Integer
     * @tparam W The width of the integer. If the width is known at compile time, then this
     *           argument holds a literal integer type representing it, otherwise, it holds `Int`.
     * @example
     * {{{
-    *   val a : DFUInt[3]   //width is 3 bits
-    *   val b : DFUInt[Int] //width isn't known at the Scala compile-time,
+    *   val a : UInt[3]   //width is 3 bits
+    *   val b : UInt[Int] //width isn't known at the Scala compile-time,
     *                       //and checked during DFiant compilation
     * }}}
     */
-  type DFUInt[W] = DFDecimal[false, W, 0]
+  type UInt[W] = DFDecimal[false, W, 0]
   /**
     * Dataflow Signed Integer
     * @tparam W The width of the integer, including the sign bit. If the width is known at compile time, then this
     *           argument holds a literal integer type representing it, otherwise, it holds `Int`.
     * @example
     * {{{
-    *   val a : DFSInt[3]   //width is 3 bits
-    *   val b : DFSInt[Int] //width isn't known at the Scala compile-time,
+    *   val a : SInt[3]   //width is 3 bits
+    *   val b : SInt[Int] //width isn't known at the Scala compile-time,
     *                       //and checked during DFiant compilation
     * }}}
     */
-  type DFSInt[W] = DFDecimal[true, W, 0]
+  type SInt[W] = DFDecimal[true, W, 0]
   /**
     * Dataflow Enumeration
     * @tparam E The underlying type of the specific enumeration (an `DFEnum.Entries` object).
@@ -256,8 +256,8 @@ package object DFiant {
       * @example
       * {{{
       *   @df class ID extends DFDesign {
-      *     val i = DFUInt(8) <> IN
-      *     val o = DFUInt(8) <> OUT
+      *     val i = UInt(8) <> IN
+      *     val o = UInt(8) <> OUT
       *     o <> i
       *   }
       *
@@ -285,13 +285,13 @@ package object DFiant {
       * @example
       * {{{
       *   @df class ID extends DFDesign {
-      *     val i   = DFUInt(8) <> IN
-      *     val o   = DFUInt(8) <> OUT
+      *     val i   = UInt(8) <> IN
+      *     val o   = UInt(8) <> OUT
       *     o <> i
       *   }
       *   @df class IDTest extends sim.DFDimDesign {
       *     val id  = new ID
-      *     val cnt = DFUInt(8) init 0
+      *     val cnt = UInt(8) init 0
       *     id.i <> cnt
       *     sim.report(msg"\$id.o") //will output the count value
       *     cnt := cnt + 1
@@ -444,7 +444,7 @@ package object DFiant {
       * @return Bits vector token.
       */
     def b[W](args: Any*)(
-      implicit interpolator : Interpolator[DFBits.Token, "b"]
+      implicit interpolator : Interpolator[Bits.Token, "b"]
     ) : interpolator.Out = interpolator.value
     /**
       * Hexadecimal Bits Vector Token String Interpolator
@@ -475,7 +475,7 @@ package object DFiant {
       * @return Bits vector token.
       */
     def h[W](args: Any*)(
-      implicit interpolator : Interpolator[DFBits.Token, "h"]
+      implicit interpolator : Interpolator[Bits.Token, "h"]
     ) : interpolator.Out = interpolator.value
 
     def d[W](args: Any*)(
@@ -500,7 +500,7 @@ package object DFiant {
       * Scala `.toString` and places that value in the outgoing message.
       * @example
       * {{{
-      *   val a = DFUInt(8)
+      *   val a = UInt(8)
       *   a := 55
       *   val x = "nice!"
       *   sim.report(msg"a = \$a \$x") //In simulation prints out: a = 55 nice!
@@ -540,10 +540,10 @@ package object DFiant {
 
   object Interpolator {
     type Aux[T, K, Out0 <: T] = Interpolator[T, K]{type Out = Out0}
-    implicit def evb[W] : Interpolator.Aux[DFBits.Token, "b", DFBits.TokenW[W]] =
-      macro DFBits.Token.binImplStringInterpolator
-    implicit def evh[W] : Interpolator.Aux[DFBits.Token, "h", DFBits.TokenW[W]] =
-      macro DFBits.Token.hexImplStringInterpolator
+    implicit def evb[W] : Interpolator.Aux[Bits.Token, "b", Bits.TokenW[W]] =
+      macro Bits.Token.binImplStringInterpolator
+    implicit def evh[W] : Interpolator.Aux[Bits.Token, "h", Bits.TokenW[W]] =
+      macro Bits.Token.hexImplStringInterpolator
     implicit def evd[S, W, F] : Interpolator.Aux[DFDecimal.Token, "d", DFDecimal.TokenW[S, W, F]] =
       macro DFDecimal.Token.decImplStringInterpolator
   }
@@ -564,8 +564,8 @@ package object DFiant {
     *         [[DFConditional.NoRetVal.IfElseBlock.IfElseBlockOps.elsedf]] conditional branches.
     * @example
     * {{{
-    *   val b = DFBool() <> IN
-    *   val c = DFUInt(8) <> OUT
+    *   val b = Bool() <> IN
+    *   val c = UInt(8) <> OUT
     *   ifdf(b){
     *     c := 5
     *   }.elsedf {
@@ -574,7 +574,7 @@ package object DFiant {
     * }}}
     */
   def ifdf[C](cond : Exact[C])(block : => Unit)(
-    implicit ctx : DFBlock.Context, condArg : DFBool.Arg[C]
+    implicit ctx : DFBlock.Context, condArg : Bool.Arg[C]
   ) : DFConditional.NoRetVal.IfElseBlock[true] =
     new DFConditional.NoRetVal.IfElseBlock[true](Some(condArg(cond)), None)(block)
 
@@ -588,8 +588,8 @@ package object DFiant {
     *         [[DFConditional.NoRetVal.HasCaseDF.CaseBlockOps.casedf(?)]] conditional branches.
     * @example
     * {{{
-    *   val b = DFUInt(8) <> IN
-    *   val c = DFUInt(8) <> OUT
+    *   val b = UInt(8) <> IN
+    *   val c = UInt(8) <> OUT
     *   matchdf(c)
     *     .casedf(1 to 10) {c := 1}
     *     .casedf(20 to 22, 27 to 29) {c := 2}
@@ -602,24 +602,24 @@ package object DFiant {
     new DFConditional.NoRetVal.MatchHeader[MVType](matchValue, matchConfig)
 
   implicit class ListExtender[+T](val list : Iterable[T]) {
-    def foreachdf[W](sel : DFUInt[W])(block : PartialFunction[T, Unit])(implicit ctx : DFBlock.Context) : Unit = {
-      val blockMatchDF = new DFConditional.NoRetVal.MatchHeader[DFUInt.Type[W]](sel, MatchConfig.NoOverlappingCases)
+    def foreachdf[W](sel : UInt[W])(block : PartialFunction[T, Unit])(implicit ctx : DFBlock.Context) : Unit = {
+      val blockMatchDF = new DFConditional.NoRetVal.MatchHeader[UInt.Type[W]](sel, MatchConfig.NoOverlappingCases)
       val matcherFirstCase = blockMatchDF.casedf(0)(block(list.head))
       val cases = list.drop(1).zipWithIndex.foldLeft(matcherFirstCase)((a, b) => a.casedf(b._2 + 1)(block(b._1)))
       if (sel.width.getValue != (list.size-1).bitsWidth(false)) cases.casedf(?){}
     }
-    def foreachdf[W](sel : DFBits[W])(block : PartialFunction[T, Unit])(implicit ctx : DFBlock.Context, di : DummyImplicit) : Unit = {
-      val blockMatchDF = new DFConditional.NoRetVal.MatchHeader[DFBits.Type[W]](sel, MatchConfig.NoOverlappingCases)
-      val matcherFirstCase = blockMatchDF.casedf(DFBits.Token(sel.width.getValue, BigInt(0)))(block(list.head))
-      val cases = list.drop(1).zipWithIndex.foldLeft(matcherFirstCase)((a, b) => a.casedf(DFBits.Token(sel.width.getValue, BigInt(b._2 + 1)))(block(b._1)))
+    def foreachdf[W](sel : Bits[W])(block : PartialFunction[T, Unit])(implicit ctx : DFBlock.Context, di : DummyImplicit) : Unit = {
+      val blockMatchDF = new DFConditional.NoRetVal.MatchHeader[Bits.Type[W]](sel, MatchConfig.NoOverlappingCases)
+      val matcherFirstCase = blockMatchDF.casedf(Bits.Token(sel.width.getValue, BigInt(0)))(block(list.head))
+      val cases = list.drop(1).zipWithIndex.foldLeft(matcherFirstCase)((a, b) => a.casedf(Bits.Token(sel.width.getValue, BigInt(b._2 + 1)))(block(b._1)))
       if (sel.width.getValue != (list.size-1).bitsWidth(false)) cases.casedf(?){}
     }
   }
 
-  implicit class MatchList(list : List[(DFBits.Token, DFBits.Token)]) {
+  implicit class MatchList(list : List[(Bits.Token, Bits.Token)]) {
     import DFDesign.Frontend._
-    def matchdf[MW, RW](matchValue : DFBits[MW], resultVar : DFAny.VarOf[DFBits.Type[RW]])(implicit ctx : DFBlock.Context) : Unit = {
-      val blockMatchDF = new DFConditional.NoRetVal.MatchHeader[DFBits.Type[MW]](matchValue, MatchConfig.NoOverlappingCases)
+    def matchdf[MW, RW](matchValue : Bits[MW], resultVar : DFAny.VarOf[Bits.Type[RW]])(implicit ctx : DFBlock.Context) : Unit = {
+      val blockMatchDF = new DFConditional.NoRetVal.MatchHeader[Bits.Type[MW]](matchValue, MatchConfig.NoOverlappingCases)
       if (list.nonEmpty) {
         val matcherFirstCase = blockMatchDF.casedf(list.head._1){resultVar := list.head._2}
         val cases = list.drop(1).foldLeft(matcherFirstCase)((a, b) => a.casedf(b._1){resultVar := b._2})
@@ -675,7 +675,7 @@ package object DFiant {
       */
     @targetName("nextIf")
     def =?> [C](cond : Exact[C])(
-      implicit ctx : DFBlock.Context, ta : FSM.HasFSMAscription, arg : DFBool.Arg[C]
+      implicit ctx : DFBlock.Context, ta : FSM.HasFSMAscription, arg : Bool.Arg[C]
     ) : FSM = FSM {
       srcBlock
       ifdf(arg(cond)) {
@@ -715,7 +715,7 @@ package object DFiant {
     /**
       * @return a dataflow boolean true indication if all iteration elements are equal in value
       */
-    def allAreEqual(implicit ctx : DFBlock.Context) : DFBool = {
+    def allAreEqual(implicit ctx : DFBlock.Context) : Bool = {
       val split = iter.map(_.bits).splitAt(iter.size/2)
       (split._1 lazyZip split._2).map(_ === _).reduce(_ && _)
     }
@@ -724,7 +724,7 @@ package object DFiant {
       * @param sel the requested selection within the iteration
       * @return a selected element within the iteration
       */
-    def selectdf(sel : DFUInt[Int])(implicit ctx : DFBlock.Context) : DFAny.Of[T] = {
+    def selectdf(sel : UInt[Int])(implicit ctx : DFBlock.Context) : DFAny.Of[T] = {
       val ret = iter.head.asNewVar
       iter.foreachdf(sel) {q => ret := q}
       ret

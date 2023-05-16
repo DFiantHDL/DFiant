@@ -20,15 +20,15 @@
 //import singleton.ops.GetArg0
 //
 //object IfTest {
-//  val a = DFBool()
-//  val b = DFUInt(8)
+//  val a = Bool()
+//  val b = UInt(8)
 //  val c = a && a
-//  val d : DFBool = b >= 1 && b < 2
+//  val d : Bool = b >= 1 && b < 2
 //  b := b
 //
-////  implicit class ElseIfClauseBuilder(cond : DFBool){
+////  implicit class ElseIfClauseBuilder(cond : Bool){
 ////    def apply(block : => Unit): ElseIfClause = ??? // new ElseIfClause(cond, block)
-////    def && (that : DFBool) : ElseIfClauseBuilder = ???
+////    def && (that : Bool) : ElseIfClauseBuilder = ???
 ////  }
 //
 //  ifdf (a) {
@@ -41,8 +41,8 @@
 //}
 //
 //object MatchTest {
-//  val a = DFUInt[8]
-//  val b = DFUInt[8]
+//  val a = UInt[8]
+//  val b = UInt[8]
 //  val aa = 0 to 5
 //
 ////  a.casedf(a) {

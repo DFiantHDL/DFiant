@@ -16,7 +16,7 @@ object DFVector extends DFAny.Companion {
     type TPatternBuilder[LType <: DFAny.Type] = Nothing
     val width : TwoFace.Int[Width] = TwoFace.Int.create[Width](cellType.width * cellNum)
     def getBubbleToken: TToken = Token.bubble(cellType, cellNum)
-    def getTokenFromBits(fromToken : DFBits.Token) : DFAny.Token = {
+    def getTokenFromBits(fromToken : Bits.Token) : DFAny.Token = {
       assert(fromToken.width == width.getValue)
       val cellNum = fromToken.width / cellType.width
       val cells = for (i <- 0 until cellNum) yield fromToken.bitsWL(cellType.width, i * cellType.width)
@@ -69,13 +69,13 @@ object DFVector extends DFAny.Companion {
       assert(cellType == that.cellType)
       Token(cellType, this.value ++ that.value)
     }
-    def sel(idx : DFUInt.Token) : DFAny.Token = idx.value match {
+    def sel(idx : UInt.Token) : DFAny.Token = idx.value match {
       case Some(i) => value(i.toInt)
       case None => cellType.getBubbleToken
     }
-    def == (that : DFAny.Token)(implicit bb : Bubble.Behaviour) : DFBool.Token = that match {
+    def == (that : DFAny.Token)(implicit bb : Bubble.Behaviour) : Bool.Token = that match {
       case right : Token =>
-        DFBool.Token(logical = true, this.value equals right.value)
+        Bool.Token(logical = true, this.value equals right.value)
       case _ => ???
     }
 
@@ -141,8 +141,8 @@ object DFVector extends DFAny.Companion {
 
       protected implicit class __DFVectorAliases[LT <: DFAny.Type, LN, Mod <: DFAny.Modifier.Val](val left : DFAny.Value[Type[LT, LN], Mod]) {
         def apply[I, W](idx : Exact[I])(
-          implicit ctx : DFAny.Context, w : BitsWidthOf.IntAux[LN-1, W], op : DFAny.`Op:=,<>`.Builder[DFUInt.Type[W], I]
-        ) : DFAny.Value[LT, Mod] = trydf{DFAny.ApplySel.fromArray(left, op(DFUInt.Type(w(left.dfType.cellNum-1)), idx))}
+          implicit ctx : DFAny.Context, w : BitsWidthOf.IntAux[LN-1, W], op : DFAny.`Op:=,<>`.Builder[UInt.Type[W], I]
+        ) : DFAny.Value[LT, Mod] = trydf{DFAny.ApplySel.fromArray(left, op(UInt.Type(w(left.dfType.cellNum-1)), idx))}
       }
     }
     object Frontend {
@@ -220,7 +220,7 @@ object DFVector extends DFAny.Companion {
         type ON[LN, RN, ResN] = TwoFace.Int.Shell2Aux[CalcL, LN, Int, RN, Int, ResN]
       }
 
-      implicit def evDFBits_op_DFBits[T <: DFAny.Type, LN, RN, ON](
+      implicit def evBits_op_Bits[T <: DFAny.Type, LN, RN, ON](
         implicit
         ctx : DFAny.Context,
         oN : Inference.ON[LN, RN, ON],

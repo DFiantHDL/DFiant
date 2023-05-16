@@ -11,13 +11,13 @@ package sim
   * @example
   * {{{
   *   @df class ID extends DFDesign {
-  *     val i   = DFUInt(8) <> IN
-  *     val o   = DFUInt(8) <> OUT
+  *     val i   = UInt(8) <> IN
+  *     val o   = UInt(8) <> OUT
   *     o <> i
   *   }
   *   @df class IDTest extends sim.DFDimDesign {
   *     val id  = new ID
-  *     val cnt = DFUInt(8) init 0
+  *     val cnt = UInt(8) init 0
   *     id.i <> cnt
   *     sim.report(msg"${id.o}") //will output the count value
   *     cnt := cnt + 1

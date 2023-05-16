@@ -9,8 +9,8 @@ class SeqDetSpec extends DFTopSpec {
        |  object fsm_states extends DFEnum.Auto {
        |    val S0,S1,S10,S100,S1001 = Entry()
        |  }
-       |  val seqIn     = DFBit      <> IN
-       |  val detOut    = DFBit      <> OUT
+       |  val seqIn     = Bit      <> IN
+       |  val detOut    = Bit      <> OUT
        |  val fsm_state = fsm_states <> VAR init fsm_states.S0
        |  matchdf(fsm_state)
        |  .casedf(fsm_states.S0) {

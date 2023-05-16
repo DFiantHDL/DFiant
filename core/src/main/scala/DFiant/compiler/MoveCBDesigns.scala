@@ -12,16 +12,16 @@ control logic.
 
 For example:
   @df class Accumulator extends DFDesign {
-    final val x     = DFUInt(8) <> IN
-    final val o     = DFUInt(8) <> OUT
-    private val acc = DFUInt(8) <> VAR init 0
+    final val x     = UInt(8) <> IN
+    final val o     = UInt(8) <> OUT
+    private val acc = UInt(8) <> VAR init 0
     acc := acc + x
     o := acc.prev
   }
 
   @df class AccumulateSmallerThan10 extends DFDesign {
-    val x = DFUInt(8) <> IN
-    val y = DFUInt(8) <> OUT
+    val x = UInt(8) <> IN
+    val y = UInt(8) <> OUT
     ifdf (x < 10) {
       val acc = new Accumulator tag OutsideOwnerDisable
       acc.x <> x
@@ -31,8 +31,8 @@ For example:
 
   Will become:
   @df class AccumulateSmallerThan10 extends DFDesign {
-    val x = DFUInt(8) <> IN
-    val y = DFUInt(8) <> OUT
+    val x = UInt(8) <> IN
+    val y = UInt(8) <> OUT
     val acc = new Accumulator
     acc.disable()
     ifdf (x < 10) {

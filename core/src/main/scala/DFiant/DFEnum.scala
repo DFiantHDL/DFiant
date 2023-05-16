@@ -37,7 +37,7 @@ object DFEnum extends DFAny.Companion {
     type TPatternAble[+R] = Pattern.Able[R]
     type TPatternBuilder[LType <: DFAny.Type] = Pattern.Builder[LType]
     def getBubbleToken: TToken = Token.bubble(entries)
-    def getTokenFromBits(fromToken : DFBits.Token) : DFAny.Token =
+    def getTokenFromBits(fromToken : Bits.Token) : DFAny.Token =
       Token(entries, entries.all(fromToken.valueBits.toBigInt))
     def assignCheck(from : DFAny.Member)(implicit ctx : DFAny.Context) : Unit = trydf {
       from match {
@@ -131,7 +131,7 @@ object DFEnum extends DFAny.Companion {
   class Pattern(set : Set[Entries.Entry]) extends DFAny.Pattern.OfSet[Type[Entries], Entries.Entry, Pattern](set) {
     protected def matchCond(matchVal: DFAny.Of[Type[Entries]], value : Entries.Entry)(
       implicit ctx: DFAny.Context
-    ): DFBool = {
+    ): Bool = {
       import DFDesign.Frontend._
       matchVal === value.asInstanceOf[Entries#Entry]
     }
@@ -375,11 +375,11 @@ object DFEnum extends DFAny.Companion {
     }
 
     private type Msg2[EW] = "Entry value width (" + ToString[EW] + ") is different than the enumeration width (" + ToString[Width] + ")"
-    def Entry[W](t : DFBits.TokenW[W])(
+    def Entry[W](t : Bits.TokenW[W])(
       implicit check : RequireMsg[W == Width, Msg2[W]], enumOwner : Entries, meta : Meta
     ) : Entry = new Entry(t.valueBits.toBigInt, enumOwner)
 
-    def Entry(t : DFBits.Token)(
+    def Entry(t : Bits.Token)(
       implicit enumOwner : Entries, meta : Meta
     ) : Entry = {
       require(t.width == width.getValue, s"`${meta.name}` entry value width (${t.width}) is different than the enumeration width ($width)")

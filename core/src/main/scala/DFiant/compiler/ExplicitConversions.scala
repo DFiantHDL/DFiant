@@ -7,24 +7,24 @@ import DFiant.DFAny.Func2.Op
 final class ExplicitConversions[D <: DFDesign](c : IRCompilation[D]) {
   private val designDB = c.db
   private def resizeUInt(dfVal : DFAny.Member, updatedWidth : Int)(implicit ctx : DFBlock.Context) : DFAny.Member = dfVal match {
-    case DFAny.Const(dfType, token : DFUInt.Token, ownerRef, tags) =>
+    case DFAny.Const(dfType, token : UInt.Token, ownerRef, tags) =>
       DFAny.Const(dfType, token.resize(updatedWidth), ownerRef, tags)
     case _ =>
-      dfVal.asValOf[DFUInt.Type[Int]].resize(updatedWidth).anonymize.member
+      dfVal.asValOf[UInt.Type[Int]].resize(updatedWidth).anonymize.member
   }
   private def resizeSInt(dfVal : DFAny.Member, updatedWidth : Int)(implicit ctx : DFBlock.Context) : DFAny.Member = dfVal match {
-    case DFAny.Const(dfType, token : DFSInt.Token, ownerRef, tags) =>
+    case DFAny.Const(dfType, token : SInt.Token, ownerRef, tags) =>
       DFAny.Const(dfType, token.resize(updatedWidth), ownerRef, tags)
     case _ =>
-      dfVal.asValOf[DFSInt.Type[Int]].resize(updatedWidth).anonymize.member
+      dfVal.asValOf[SInt.Type[Int]].resize(updatedWidth).anonymize.member
   }
   private def toggleLogical(dfVal : DFAny.Member)(implicit ctx : DFBlock.Context) : DFAny.Member = dfVal match {
-    case DFAny.Const(_, DFBool.Token(logical, value), ownerRef, tags) =>
-      DFAny.Const(DFBool.Type(!logical), DFBool.Token(!logical, value), ownerRef, tags)
-    case DFBit() =>
-      (dfVal.asValOf[DFBool.Type] === 1).anonymize.member
-    case DFBool() =>
-      DFAny.Alias.AsIs(DFBool.Type(false), dfVal.asValOf[DFBool.Type]).anonymize.member
+    case DFAny.Const(_, Bool.Token(logical, value), ownerRef, tags) =>
+      DFAny.Const(Bool.Type(!logical), Bool.Token(!logical, value), ownerRef, tags)
+    case Bit() =>
+      (dfVal.asValOf[Bool.Type] === 1).anonymize.member
+    case Bool() =>
+      DFAny.Alias.AsIs(Bool.Type(false), dfVal.asValOf[Bool.Type]).anonymize.member
   }
 
   import designDB.__getset
@@ -39,23 +39,23 @@ final class ExplicitConversions[D <: DFDesign](c : IRCompilation[D]) {
             case Op.*^ => Op.*
           }
           private val tokenFuncNC : (_ <: DFAny.Token, _ <: DFAny.Token) => DFAny.Token = (op, dfType) match {
-            case (Op.+^, DFUInt.Type(_)) => (l : DFUInt.Token, r : DFUInt.Token) => l + r
-            case (Op.-^, DFUInt.Type(_)) => (l : DFUInt.Token, r : DFUInt.Token) => l - r
-            case (Op.*^, DFUInt.Type(_)) => (l : DFUInt.Token, r : DFUInt.Token) => l * r
-            case (Op.+^, DFSInt.Type(_)) => (l : DFSInt.Token, r : DFSInt.Token) => l + r
-            case (Op.-^, DFSInt.Type(_)) => (l : DFSInt.Token, r : DFSInt.Token) => l - r
-            case (Op.*^, DFSInt.Type(_)) => (l : DFSInt.Token, r : DFSInt.Token) => l * r
+            case (Op.+^, UInt.Type(_)) => (l : UInt.Token, r : UInt.Token) => l + r
+            case (Op.-^, UInt.Type(_)) => (l : UInt.Token, r : UInt.Token) => l - r
+            case (Op.*^, UInt.Type(_)) => (l : UInt.Token, r : UInt.Token) => l * r
+            case (Op.+^, SInt.Type(_)) => (l : SInt.Token, r : SInt.Token) => l + r
+            case (Op.-^, SInt.Type(_)) => (l : SInt.Token, r : SInt.Token) => l - r
+            case (Op.*^, SInt.Type(_)) => (l : SInt.Token, r : SInt.Token) => l * r
             case _ => ???
           }
           private val (left, right) = dfType match {
-            case DFUInt.Type(targetWidth) =>
+            case UInt.Type(targetWidth) =>
               if (leftArg.width >= rightArg.width)
-                (leftArg.asValOf[DFUInt.Type[Int]].resize(targetWidth).member.anonymize, rightArg)
-              else (leftArg, rightArg.asValOf[DFUInt.Type[Int]].resize(targetWidth).member.anonymize)
-            case DFSInt.Type(targetWidth) =>
+                (leftArg.asValOf[UInt.Type[Int]].resize(targetWidth).member.anonymize, rightArg)
+              else (leftArg, rightArg.asValOf[UInt.Type[Int]].resize(targetWidth).member.anonymize)
+            case SInt.Type(targetWidth) =>
               if (leftArg.width >= rightArg.width)
-                (leftArg.asValOf[DFSInt.Type[Int]].resize(targetWidth).member.anonymize, rightArg)
-              else (leftArg, rightArg.asValOf[DFSInt.Type[Int]].resize(targetWidth).member.anonymize)
+                (leftArg.asValOf[SInt.Type[Int]].resize(targetWidth).member.anonymize, rightArg)
+              else (leftArg, rightArg.asValOf[SInt.Type[Int]].resize(targetWidth).member.anonymize)
           }
           DFAny.Func2.forced(dfType, left, opNC, right)(tokenFuncNC) setTags(_ => func.tags)
         }
@@ -72,21 +72,21 @@ final class ExplicitConversions[D <: DFDesign](c : IRCompilation[D]) {
         val toVal = net.toRef.get
         val fromVal = net.fromRef.get
         val conv = (toVal, fromVal) match {
-          case (DFUInt(toWidth), DFUInt(fromWidth)) if toWidth > fromWidth => true
-          case (DFSInt(toWidth), DFSInt(fromWidth)) if toWidth > fromWidth => true
-          case (DFBool(), DFBit()) => true
-          case (DFBit(), DFBool()) => true
+          case (UInt(toWidth), UInt(fromWidth)) if toWidth > fromWidth => true
+          case (SInt(toWidth), SInt(fromWidth)) if toWidth > fromWidth => true
+          case (Bool(), Bit()) => true
+          case (Bit(), Bool()) => true
           case _ => false
         }
         if (conv) {
           val dsn = new MetaDesign() {
             val updatedFromVal = (toVal, fromVal) match {
-              case (DFUInt(toWidth), DFUInt(fromWidth)) if toWidth > fromWidth =>
-                fromVal.asValOf[DFUInt.Type[Int]].resize(toWidth).member.anonymize
-              case (DFSInt(toWidth), DFSInt(fromWidth)) if toWidth > fromWidth =>
-                fromVal.asValOf[DFSInt.Type[Int]].resize(toWidth).member.anonymize
-              case (DFBool(), DFBit()) => toggleLogical(fromVal)
-              case (DFBit(), DFBool()) => toggleLogical(fromVal)
+              case (UInt(toWidth), UInt(fromWidth)) if toWidth > fromWidth =>
+                fromVal.asValOf[UInt.Type[Int]].resize(toWidth).member.anonymize
+              case (SInt(toWidth), SInt(fromWidth)) if toWidth > fromWidth =>
+                fromVal.asValOf[SInt.Type[Int]].resize(toWidth).member.anonymize
+              case (Bool(), Bit()) => toggleLogical(fromVal)
+              case (Bit(), Bool()) => toggleLogical(fromVal)
             }
             toVal.assign(updatedFromVal)
           }
@@ -97,17 +97,17 @@ final class ExplicitConversions[D <: DFDesign](c : IRCompilation[D]) {
         val leftArg = func.leftArgRef.get
         val rightArg = func.rightArgRef.get
         val conv = (leftArg, rightArg) match {
-          case (DFBit(), DFBool()) => true
-          case (DFBool(), DFBit()) => true
+          case (Bit(), Bool()) => true
+          case (Bool(), Bit()) => true
           case _ => false
         }
         if (conv) {
           val dsn = new MetaDesign() {
             (leftArg, rightArg) match {
-              case (DFBit(), DFBool()) =>
-                DFAny.Func2.forced(DFBool.Type(true), toggleLogical(leftArg), func.op, rightArg)(func.tokenFunc).anonymize
-              case (DFBool(), DFBit()) =>
-                DFAny.Func2.forced(DFBool.Type(true), leftArg, func.op, toggleLogical(rightArg))(func.tokenFunc).anonymize
+              case (Bit(), Bool()) =>
+                DFAny.Func2.forced(Bool.Type(true), toggleLogical(leftArg), func.op, rightArg)(func.tokenFunc).anonymize
+              case (Bool(), Bit()) =>
+                DFAny.Func2.forced(Bool.Type(true), leftArg, func.op, toggleLogical(rightArg))(func.tokenFunc).anonymize
               case _ => None
             }
           }
@@ -118,7 +118,7 @@ final class ExplicitConversions[D <: DFDesign](c : IRCompilation[D]) {
         val cond = condRef.get
         val prevIfOption = prevBlockRefOption.map(r => r.get)
         cond match {
-          case DFBit() =>
+          case Bit() =>
             val dsn = new MetaDesign() {
               DFConditional.IfElseBlock(Some(toggleLogical(cond)), prevIfOption)
             }
@@ -126,9 +126,9 @@ final class ExplicitConversions[D <: DFDesign](c : IRCompilation[D]) {
           case _ => None
         }
       //assert on bit
-      case asrt @ sim.DFSimMember.Assert.Unref(Some(cond @ DFBit()), msg, severity, _, _) =>
+      case asrt @ sim.DFSimMember.Assert.Unref(Some(cond @ Bit()), msg, severity, _, _) =>
         val dsn = new MetaDesign() {
-          sim.DFSimMember.Assert(Some(toggleLogical(cond).asInstanceOf[DFBool]), msg, severity)
+          sim.DFSimMember.Assert(Some(toggleLogical(cond).asInstanceOf[Bool]), msg, severity)
         }
         Some(asrt -> Patch.Add(dsn, Patch.Add.Config.ReplaceWithLast(Patch.Replace.Config.FullReplacement)))
       case _ => None

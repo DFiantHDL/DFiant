@@ -34,8 +34,8 @@ final class Compiler[D <: DFDesign](c : IRCompilation[D]) {
         (if (whens.isEmpty) when else s"$when\n$whens", statements)
       case (mh : DFConditional.MatchHeader, (whens, statements)) =>
         val matchValStr = mh.matchValRef.get match {
-          case v @ DFUInt(_) => s"$FN to_integer(${Value.ref(v)})"
-          case v @ DFSInt(_) => s"$FN to_integer(${Value.ref(v)})"
+          case v @ UInt(_) => s"$FN to_integer(${Value.ref(v)})"
+          case v @ SInt(_) => s"$FN to_integer(${Value.ref(v)})"
           case v => Value.ref(v)
         }
         ("", Case(matchValStr, whens, printer.getSet.designDB.caseWithDontCare(mh)) :: statements)
@@ -82,14 +82,14 @@ final class Compiler[D <: DFDesign](c : IRCompilation[D]) {
           case _: DFEnum.Manual[_] => true
         }
         //Bits comparison doesn't cover "XXX" checks, so we need to force others clause for it
-        case v @ DFBits(width) =>
+        case v @ Bits(width) =>
           val cases = mh.getCases
           val hasCase_ = cases.exists(c => c.patternOption.isEmpty)
           if (!hasCase_ && ((BigInt.maxUnsignedFromWidth(width) + 1) == cases.size)) true
           else false
         //Because of to_integer conversion of the match value, we must force an others clause, since
         //to_integer is always producing 32-bit integer
-        case DFUInt(_) | DFSInt(_) => true
+        case UInt(_) | SInt(_) => true
         //Non-enumeration exhaustively coverage is already handled in the ExplicitPrev stage
         case _ => false
       }

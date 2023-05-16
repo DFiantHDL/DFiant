@@ -23,16 +23,16 @@ During this stage we do the following:
 
 For example:
   @df class Accumulator extends DFDesign {
-    final val x     = DFUInt(8) <> IN
-    final val o     = DFUInt(8) <> OUT
-    private val acc = DFUInt(8) init 0
+    final val x     = UInt(8) <> IN
+    final val o     = UInt(8) <> OUT
+    private val acc = UInt(8) init 0
     acc := acc + x
     o := acc.prev
   }
 
   @df class AccumulateSmallerThan10 extends DFDesign {
-    val x = DFUInt(8) <> IN
-    val y = DFUInt(8) <> OUT
+    val x = UInt(8) <> IN
+    val y = UInt(8) <> OUT
     val acc = new Accumulator
     acc.disable()
     ifdf (x < 10) {
@@ -44,10 +44,10 @@ For example:
 
   Will become:
   @df class Accumulator extends DFDesign {
-    final val x     = DFUInt(8) <> IN
-    final val o     = DFUInt(8) <> OUT
+    final val x     = UInt(8) <> IN
+    final val o     = UInt(8) <> OUT
     final val dsnCtrl = DFEnum(Control.Op)
-    private val acc = DFUInt(8) init 0
+    private val acc = UInt(8) init 0
     acc := acc + x
     o := acc.prev
     matchdf(dsnCtrl)
@@ -56,8 +56,8 @@ For example:
   }
 
   @df class AccumulateSmallerThan10 extends DFDesign {
-    val x = DFUInt(8) <> IN
-    val y = DFUInt(8) <> OUT
+    val x = UInt(8) <> IN
+    val y = UInt(8) <> OUT
     val acc = new Accumulator
     val acc_dsnCtrl = DFEnum(Control.Op)
     acc.dsnCtrl `<LZ>` acc_dsnCtrl

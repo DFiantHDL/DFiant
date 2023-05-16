@@ -23,8 +23,8 @@ import scala.reflect.{ClassTag, classTag}
   * @example
   * {{{
   *   @df class ID extends DFDesign {
-  *     val i = DFUInt(8) <> IN
-  *     val o = DFUInt(8) <> OUT
+  *     val i = UInt(8) <> IN
+  *     val o = UInt(8) <> OUT
   *     o <> i
   *   }
   * }}}
@@ -122,9 +122,9 @@ object DFDesign {
 
   trait Frontend extends
     DFAny.Frontend.Inherited with
-    DFBits.Frontend.Inherited with
+    Bits.Frontend.Inherited with
     DFEnum.Frontend.Inherited with
-    DFBool.Frontend.Inherited with
+    Bool.Frontend.Inherited with
     DFDecimal.Frontend.Inherited with
     DFVector.Frontend.Inherited with
     DFStruct.Frontend.Inherited with
@@ -138,7 +138,7 @@ object DFDesign {
     * logic outside a dataflow design scope.
     * @example
     * {{{
-    * @df def adder(x : DFUInt[Int], y : DFUInt[Int]) = {
+    * @df def adder(x : UInt[Int], y : UInt[Int]) = {
     *   import DFDesign.Frontend._
     *   x + y //without the frontend import, the addition operator `+` is not available
     * }
@@ -147,9 +147,9 @@ object DFDesign {
     */
   object Frontend extends
     DFAny.Frontend.Imported with
-    DFBits.Frontend.Imported with
+    Bits.Frontend.Imported with
     DFEnum.Frontend.Imported with
-    DFBool.Frontend.Imported with
+    Bool.Frontend.Imported with
     DFDecimal.Frontend.Imported with
     DFVector.Frontend.Imported with
     DFStruct.Frontend.Imported with

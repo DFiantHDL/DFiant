@@ -20,8 +20,8 @@ package DFiant
 import shapeless.test.illTyped
 
 @df class OpPlusTests extends DFDesign {
-  val uint8 = DFUInt(8) <> VAR
-  val uint9 = DFUInt(9) <> VAR
+  val uint8 = UInt(8) <> VAR
+  val uint9 = UInt(9) <> VAR
   uint8.extendable + uint9
   illTyped("""uint8 + uint9""")
   uint9 + uint8
@@ -41,8 +41,8 @@ import shapeless.test.illTyped
 
 
 @df class OpComparisonTests extends DFDesign {
-  val uint8 = DFUInt(8) <> VAR
-  val uint9 = DFUInt(9) <> VAR
+  val uint8 = UInt(8) <> VAR
+  val uint9 = UInt(9) <> VAR
   illTyped("""uint8 == uint9""")
   illTyped("""uint9 == uint8""")
 //  illTyped("""uint8 == d"511"""")

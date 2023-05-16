@@ -177,13 +177,13 @@ object DFConditional {
   }
   object WithRetVal {
     final class IfElseBlock[Type <: DFAny.Type, HasElse](
-      retVar : DFAny.VarOf[Type], condOption : Option[DFBool], prevBlockOption : Option[DFConditional.IfElseBlock]
+      retVar : DFAny.VarOf[Type], condOption : Option[Bool], prevBlockOption : Option[DFConditional.IfElseBlock]
     )(block: => DFAny.Of[Type])(implicit ctx : DFBlock.Context) extends WithRetVal[DFConditional.IfElseBlock, Type](retVar) {
       val owner : DFConditional.IfElseBlock = DFConditional.IfElseBlock(condOption.map(_.member), prevBlockOption)
       applyBlock(block)
     }
     object IfElseBlock {
-      def newIf[Type <: DFAny.Type, B, C](retVar : DFAny.VarOf[Type], cond: DFBool)(block : => DFAny.Of[Type])(
+      def newIf[Type <: DFAny.Type, B, C](retVar : DFAny.VarOf[Type], cond: Bool)(block : => DFAny.Of[Type])(
         implicit ctx: DFBlock.Context
       ): IfElseBlock[Type, true] = new IfElseBlock[Type, true](retVar, Some(cond), None)(block)
 
@@ -194,7 +194,7 @@ object DFConditional {
         ) : IfElseBlock[Type, false] =
           new IfElseBlock[Type, false](retVar, None, Some(owner))(blockConv(dfType, block))
         def elseifdf[C, B](cond : Exact[C])(block : => Exact[B])(
-          implicit ctx : DFBlock.Context, condArg : DFBool.Arg[C], blockConv : retVar.Arg[B]
+          implicit ctx : DFBlock.Context, condArg : Bool.Arg[C], blockConv : retVar.Arg[B]
         ) : IfElseBlock[Type, true] =
           new IfElseBlock[Type, true](retVar, Some(condArg(cond)), Some(owner))(blockConv(dfType, block))
       }
@@ -245,7 +245,7 @@ object DFConditional {
   }
   object NoRetVal {
     final class IfElseBlock[HasElse](
-      condOption : Option[DFBool], prevBlockOption : Option[DFConditional.IfElseBlock]
+      condOption : Option[Bool], prevBlockOption : Option[DFConditional.IfElseBlock]
     )(block: => Unit)(implicit ctx : DFBlock.Context) extends NoRetVal[DFConditional.IfElseBlock] {
       val owner : DFConditional.IfElseBlock = DFConditional.IfElseBlock(condOption.map(_.member), prevBlockOption)
       applyBlock(block)
@@ -257,7 +257,7 @@ object DFConditional {
           implicit ctx : DFBlock.Context
         ) : IfElseBlock[false] = new IfElseBlock[false](None, Some(owner))(block)
         def elseifdf[C, B](cond : Exact[C])(block : => Unit)(
-          implicit ctx : DFBlock.Context, condArg : DFBool.Arg[C]
+          implicit ctx : DFBlock.Context, condArg : Bool.Arg[C]
         ) : IfElseBlock[true] = new IfElseBlock[true](Some(condArg(cond)), Some(owner))(block)
       }
     }

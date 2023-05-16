@@ -21,10 +21,10 @@ import DFiant.compiler.csprinter.CSPrinter
 
 /**
   * A dataflow bit companion object.
-  * Most inter-workings are relying on a DFBool
+  * Most inter-workings are relying on a Bool
   */
-object DFBit {
-  type Type = DFBool.Type
+object Bit {
+  type Type = Bool.Type
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Public Constructors
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ object DFBit {
     * @param ctx An implicit dataflow design context
     */
   def unapply(arg: DFAny.Member): Boolean = arg.dfType match {
-    case DFBool.Type(logical) if !logical => true
+    case Bool.Type(logical) if !logical => true
     case _ => false
   }
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

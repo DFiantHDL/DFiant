@@ -64,7 +64,7 @@ final case class SourceElement(
 ) { left =>
   val relWidth : Int = relBitHigh - relBitLow + 1
   assert(relWidth > 0)
-  val dfType : DFAny.Type = if (relWidth == srcVal.member.width) srcVal.member.dfType else DFBits.Type(relWidth)
+  val dfType : DFAny.Type = if (relWidth == srcVal.member.width) srcVal.member.dfType else Bits.Type(relWidth)
   def bits(relBitHigh : Int, relBitLow : Int) : List[SourceElement] =
     if (relBitHigh < relBitLow) Nil
     else List(copy(relBitHigh = this.relBitLow + relBitHigh, relBitLow = this.relBitLow + relBitLow))
@@ -143,7 +143,7 @@ final case class Source(elements : List[SourceElement]) { lhs =>
   def bits(relBitHigh : Int, relBitLow : Int) : Source = {
     val (highElemIdx, highRelIdx) = bitIdxToElementIdx(relBitHigh)
     val (lowElemIdx, lowRelIdx) = bitIdxToElementIdx(relBitLow)
-    val dfType = DFBits.Type(relBitHigh - relBitLow + 1)
+    val dfType = Bits.Type(relBitHigh - relBitLow + 1)
     if (highElemIdx == lowElemIdx) { //same element
       val (_, selElem :: _) = elements.splitAt(highElemIdx)
       Source(selElem.bits(highRelIdx, lowRelIdx))

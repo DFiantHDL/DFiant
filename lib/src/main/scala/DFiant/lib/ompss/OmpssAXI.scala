@@ -17,7 +17,7 @@ case object INOUT
     case Right(_) => AXI4.SRW
   }
   final val axi = axiNode <> axiDir setNameFlatten(DFOwner.NameFlatten.IgnoreOwnerName)
-  final val offset  = DFBits(64) <> (if (flipped) OUT else IN)
+  final val offset  = Bits(64) <> (if (flipped) OUT else IN)
 }
 
 object OmpssAXI {

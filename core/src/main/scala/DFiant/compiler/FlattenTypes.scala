@@ -174,8 +174,8 @@ final class FlattenTypes[D <: DFDesign](c : IRCompilation[D]) {
 //          private def addConcat = {
 //            val concatBits = fieldList.map {
 //              case f : DFStruct.Field[DFAny.Type @unchecked] =>
-//                fieldMemberMap((relVal, f.fieldName)).asVal.bits.anonymize.asValOf[DFBits.Type[Int]]
-//            }.reduce[DFBits[Int]](_ ++ _)
+//                fieldMemberMap((relVal, f.fieldName)).asVal.bits.anonymize.asValOf[Bits.Type[Int]]
+//            }.reduce[Bits[Int]](_ ++ _)
 //            if (relWidth == relVal.width) concatBits else concatBits.anonymize.bitsWL(relWidth, relBitLow)
 //          }
 //          if (bitsSel.isAnonymous) addConcat.anonymize else addConcat.setName(bitsSel.name)

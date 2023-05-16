@@ -21,109 +21,109 @@
 //import org.scalacheck._
 //import shapeless.test.illTyped
 //
-//class DFUIntTest extends Properties("DFUIntTestSpec") {
+//class UIntTest extends Properties("UIntTestSpec") {
 //  import GlobalDesign._
-//  property("DFUInt[W] @ W < 0 compile error") = wellTyped {
-//    illTyped { """DFUInt[0]""" }
-//    illTyped { """DFUInt[-1]""" }
-//    illTyped { """DFUInt(0)""" }
-//    illTyped { """DFUInt(-1)""" }
-//    illRun(DFUInt(nf(0)))
+//  property("UInt[W] @ W < 0 compile error") = wellTyped {
+//    illTyped { """UInt[0]""" }
+//    illTyped { """UInt[-1]""" }
+//    illTyped { """UInt(0)""" }
+//    illTyped { """UInt(-1)""" }
+//    illRun(UInt(nf(0)))
 //  }
 //
-//  property("DFUInt construction") = {
-//    val a = DFUInt(1)
-//    implicitly[a.type <:< DFUInt[1]]
-//    val b = DFUInt[2]
-//    implicitly[b.type <:< DFUInt[2]]
-//    val c = DFUInt(nf(8))
-//    implicitly[c.type <:< DFUInt[Int]]
+//  property("UInt construction") = {
+//    val a = UInt(1)
+//    implicitly[a.type <:< UInt[1]]
+//    val b = UInt[2]
+//    implicitly[b.type <:< UInt[2]]
+//    val c = UInt(nf(8))
+//    implicitly[c.type <:< UInt[Int]]
 //    c.width == 8
 //  }
 //
-//  property("DFUInt conversion from number") = {
-//    val d = 15.toDFUInt
-//    implicitly[d.type <:< DFUInt[4]]
-//    val d2 = 16.toDFUInt
-//    implicitly[d2.type <:< DFUInt[5]]
-//    val dL = 0L.toDFUInt
-//    implicitly[dL.type <:< DFUInt[1]]
-//    val dus = nf(15).toDFUInt
-//    implicitly[dus.type <:< DFUInt[Int]]
-//    val dusL = nf(16L).toDFUInt
-//    val dusBig = BigInt(31).toDFUInt
+//  property("UInt conversion from number") = {
+//    val d = 15.toUInt
+//    implicitly[d.type <:< UInt[4]]
+//    val d2 = 16.toUInt
+//    implicitly[d2.type <:< UInt[5]]
+//    val dL = 0L.toUInt
+//    implicitly[dL.type <:< UInt[1]]
+//    val dus = nf(15).toUInt
+//    implicitly[dus.type <:< UInt[Int]]
+//    val dusL = nf(16L).toUInt
+//    val dusBig = BigInt(31).toUInt
 //    dus.width == 4 && dusL.width == 5 && dusBig.width == 5
 //  }
 //
-//  property("DFUInt conversion from DFBits") = {
-//    val a = DFBits(8).init(bin"11",20,?,15L)
-//    val b = a.toDFUInt
-//    implicitly[b.type <:< DFUInt[8]]
+//  property("UInt conversion from Bits") = {
+//    val a = Bits(8).init(bin"11",20,?,15L)
+//    val b = a.toUInt
+//    implicitly[b.type <:< UInt[8]]
 //    bi(0).valueUInt == BigInt(3) && bi(1).valueUInt == BigInt(20) && bi(2).isBubble && bi(3).valueUInt == BigInt(15)
 //  }
 //
-//  property("DFUInt conversion error") = wellTyped {
-//    illTyped { """(-1).toDFUInt""" }
-//    illTyped { """(-1L).toDFUInt""" }
-//    illRun(nf(-1).toDFUInt)
-//    illRun(nf(-1L).toDFUInt)
-//    illRun(BigInt(-1).toDFUInt)
+//  property("UInt conversion error") = wellTyped {
+//    illTyped { """(-1).toUInt""" }
+//    illTyped { """(-1L).toUInt""" }
+//    illRun(nf(-1).toUInt)
+//    illRun(nf(-1L).toUInt)
+//    illRun(BigInt(-1).toUInt)
 //  }
 //
-//  property("DFUInt := compilable") = wellTyped {
-//    val u8 = DFUInt(8)
-//    val u7 = DFUInt(7)
+//  property("UInt := compilable") = wellTyped {
+//    val u8 = UInt(8)
+//    val u7 = UInt(7)
 //    u8 := 1
 //    u8 := 1L
 //    u8 := u7
 //    u8 := BigInt(1)
 //  }
 //
-//  property("DFUInt := uncompilable") = wellTyped {
-//    val u8 = DFUInt(8)
-//    val u7 = DFUInt(7)
+//  property("UInt := uncompilable") = wellTyped {
+//    val u8 = UInt(8)
+//    val u7 = UInt(7)
 //    illTyped { """u8 := 500""" }
 //    illTyped { """u8 := 500L""" }
 //    illTyped { """u7 := u8""" }
 //    illRun {u8 := BigInt(500)}
 //  }
 //
-//  property("DFUInt == compilable") = wellTyped {
-//    val u8 = DFUInt(8)
-//    val u7 = DFUInt(7)
+//  property("UInt == compilable") = wellTyped {
+//    val u8 = UInt(8)
+//    val u7 = UInt(7)
 //    u8 == 1
 //    u8 == 1L
 //    u8 == BigInt(1)
 //    u8 == (u7 + 1).wc
 //  }
 //
-//  property("DFUInt == uncompilable") = wellTyped {
-//    val u8 = DFUInt(8)
-//    val u7 = DFUInt(7)
+//  property("UInt == uncompilable") = wellTyped {
+//    val u8 = UInt(8)
+//    val u7 = UInt(7)
 //    illTyped { """u8 == u7""" }
 //    illTyped { """u8 == -1""" }
 //    illTyped { """u8 == -1L""" }
 //    illRun {u8 == BigInt(-1)}
 //  }
 //
-//  property("DFUInt + DFUInt compilable") = {
-//    val u8 = DFUInt(8)
-//    val u9 = DFUInt(9)
-//    val u8us = DFUInt(nf(8))
-//    val u9us = DFUInt(nf(9))
+//  property("UInt + UInt compilable") = {
+//    val u8 = UInt(8)
+//    val u9 = UInt(9)
+//    val u8us = UInt(nf(8))
+//    val u9us = UInt(nf(9))
 //    val u98 = u9 + u8
-//    implicitly[u98.type <:< DFUInt[9]]
-//    implicitly[u98.wc.type <:< DFUInt[10]]
-//    implicitly[u98.c.type <:< DFBits[1]]
+//    implicitly[u98.type <:< UInt[9]]
+//    implicitly[u98.wc.type <:< UInt[10]]
+//    implicitly[u98.c.type <:< Bits[1]]
 //    val u88 = u8 + u8
-//    implicitly[u88.type <:< DFUInt[8]]
+//    implicitly[u88.type <:< UInt[8]]
 //    val u89 = u8.extendable + u9
-//    implicitly[u89.type <:< DFUInt[9]]
-//    implicitly[u89.wc.type <:< DFUInt[10]]
+//    implicitly[u89.type <:< UInt[9]]
+//    implicitly[u89.wc.type <:< UInt[10]]
 //    val u98us = u9us + u8
-//    implicitly[u98us.type <:< DFUInt[Int]]
-//    implicitly[u98us.wc.type <:< DFUInt[Int]]
-//    implicitly[u98us.c.type <:< DFBits[1]]
+//    implicitly[u98us.type <:< UInt[Int]]
+//    implicitly[u98us.wc.type <:< UInt[Int]]
+//    implicitly[u98us.c.type <:< Bits[1]]
 //    u8 + u8
 //    u8.extendable + u9us
 //    u9 + u8us
@@ -136,30 +136,30 @@
 //    u98us.width == 9 && u98us.wc.width == 10
 //  }
 //
-//  property("DFUInt + DFUInt uncompilable") = wellTyped {
-//    val u8 = DFUInt(8)
-//    val u9 = DFUInt(9)
-//    val u8us = DFUInt(nf(8))
-//    val u9us = DFUInt(nf(9))
+//  property("UInt + UInt uncompilable") = wellTyped {
+//    val u8 = UInt(8)
+//    val u9 = UInt(9)
+//    val u8us = UInt(nf(8))
+//    val u9us = UInt(nf(9))
 //    illTyped { """u8 + u9""" }
 //    illRun(u8 + u9us)
 //    illRun(u8us + u9)
 //    illRun(u8us + u9us)
 //  }
 //
-//  property("DFUInt + Int compilable") = {
+//  property("UInt + Int compilable") = {
 //    val u8 : 200 = 200
-//    val u9 = DFUInt(9)
+//    val u9 = UInt(9)
 //    val u8us = nf(200)
-//    val u9us = DFUInt(nf(9))
+//    val u9us = UInt(nf(9))
 //    val u98 = u9 + u8
-//    implicitly[u98.type <:< DFUInt[9]]
-//    implicitly[u98.wc.type <:< DFUInt[10]]
-//    implicitly[u98.c.type <:< DFBits[1]]
+//    implicitly[u98.type <:< UInt[9]]
+//    implicitly[u98.wc.type <:< UInt[10]]
+//    implicitly[u98.c.type <:< Bits[1]]
 //    val u98us = u9us + u8
-//    implicitly[u98us.type <:< DFUInt[Int]]
-//    implicitly[u98us.wc.type <:< DFUInt[Int]]
-//    implicitly[u98us.c.type <:< DFBits[1]]
+//    implicitly[u98us.type <:< UInt[Int]]
+//    implicitly[u98us.wc.type <:< UInt[Int]]
+//    implicitly[u98us.c.type <:< Bits[1]]
 //    u9 + u8us
 //    u9us + u8us
 //    u9 + -1
@@ -169,10 +169,10 @@
 //    u98us.width == 9 && u98us.wc.width == 10
 //  }
 //
-//  property("DFUInt + Int uncompilable") = wellTyped {
-//    val u8 = DFUInt(8)
+//  property("UInt + Int uncompilable") = wellTyped {
+//    val u8 = UInt(8)
 //    val u9 : 511 = 511
-//    val u8us = DFUInt(nf(8))
+//    val u8us = UInt(nf(8))
 //    val u9us = nf(511)
 //    illTyped { """u8 + u9""" }
 //    illRun(u8 + u9us)
@@ -183,22 +183,22 @@
 //    illRun(u8us + nf(-511))
 //  }
 //
-//  property("Int + DFUInt compilable") = {
-//    val u8 = DFUInt(8)
+//  property("Int + UInt compilable") = {
+//    val u8 = UInt(8)
 //    val u9 : 511 = 511
-//    val u8us = DFUInt(nf(8))
+//    val u8us = UInt(nf(8))
 //    val u9us = nf(511)
 //    val u98 = u9 + u8
-//    implicitly[u98.type <:< DFUInt[9]]
-//    implicitly[u98.wc.type <:< DFUInt[10]]
-//    implicitly[u98.c.type <:< DFBits[1]]
+//    implicitly[u98.type <:< UInt[9]]
+//    implicitly[u98.wc.type <:< UInt[10]]
+//    implicitly[u98.c.type <:< Bits[1]]
 //    val u89 = u8.extendable + u9
-//    implicitly[u89.type <:< DFUInt[9]]
-//    implicitly[u89.wc.type <:< DFUInt[10]]
+//    implicitly[u89.type <:< UInt[9]]
+//    implicitly[u89.wc.type <:< UInt[10]]
 //    val u98us = u9us + u8
-//    implicitly[u98us.type <:< DFUInt[Int]]
-//    implicitly[u98us.wc.type <:< DFUInt[Int]]
-//    implicitly[u98us.c.type <:< DFBits[1]]
+//    implicitly[u98us.type <:< UInt[Int]]
+//    implicitly[u98us.wc.type <:< UInt[Int]]
+//    implicitly[u98us.c.type <:< Bits[1]]
 //    u8.extendable + u9us
 //    u9 + u8us
 //    u8us + u8us
@@ -209,11 +209,11 @@
 //    u98us.width == 9 && u98us.wc.width == 10
 //  }
 //
-//  property("Int + DFUInt uncompilable") = wellTyped {
+//  property("Int + UInt uncompilable") = wellTyped {
 //    val u8 : 200 = 200
-//    val u9 = DFUInt(9)
+//    val u9 = UInt(9)
 //    val u8us = nf(200)
-//    val u9us = DFUInt(nf(9))
+//    val u9us = UInt(nf(9))
 //    illTyped { """u8 + u9""" }
 //    illTyped { """-511 + u9""" }
 //    illRun(u8 + u9us)
@@ -222,12 +222,12 @@
 //  }
 //
 //  property("Final Port conversions") = wellTyped {
-//    val u7 = DFUInt(7)
-//    val u7nf = DFUInt(nf(7))
-//    val u8 = DFUInt(8)
-//    val u8nf = DFUInt(nf(8))
-//    val u9 = DFUInt(9)
-//    val u9nf = DFUInt(nf(9))
+//    val u7 = UInt(7)
+//    val u7nf = UInt(nf(7))
+//    val u8 = UInt(8)
+//    val u8nf = UInt(nf(8))
+//    val u9 = UInt(9)
+//    val u9nf = UInt(nf(9))
 //    type U8 = u8.TVal
 //    new DFDesign {
 //      val u8p01: U8 <> IN = u8
@@ -268,9 +268,9 @@
 //  }
 //
 //  property("Non-Final Port conversions") = wellTyped {
-//    val u8 = DFUInt(8)
-//    val u8nf = DFUInt(nf(8))
-//    type UI = DFUInt[Int]
+//    val u8 = UInt(8)
+//    val u8nf = UInt(nf(8))
+//    type UI = UInt[Int]
 //    new DFDesign {
 //      val u8p01 : UI <> IN = u8
 //      val u8p02 : UI <> OUT = u8

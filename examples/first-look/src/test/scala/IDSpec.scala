@@ -8,8 +8,8 @@ class IDSpec extends DFTopSpec {
 
   val expectedCodeString : String =
     """|@df final class ID extends DFDesign {
-       |  val x = DFSInt(16) <> IN
-       |  val y = DFSInt(16) <> OUT
+       |  val x = SInt(16) <> IN
+       |  val y = SInt(16) <> OUT
        |  y     := x
        |}""".stripMargin
 

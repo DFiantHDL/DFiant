@@ -6,13 +6,13 @@ class ConcSpec extends DFTopSpec {
 
   val expectedCodeString : String =
     """|@df final class Conc extends DFDesign {
-       |  val i = DFUInt(32) <> IN
-       |  val j = DFUInt(32) <> IN
-       |  val a = DFUInt(32) <> OUT
-       |  val b = DFUInt(32) <> OUT
-       |  val c = DFUInt(32) <> OUT
-       |  val d = DFUInt(32) <> OUT
-       |  val e = DFUInt(32) <> OUT
+       |  val i = UInt(32) <> IN
+       |  val j = UInt(32) <> IN
+       |  val a = UInt(32) <> OUT
+       |  val b = UInt(32) <> OUT
+       |  val c = UInt(32) <> OUT
+       |  val d = UInt(32) <> OUT
+       |  val e = UInt(32) <> OUT
        |  a     := i + 5
        |  b     := a * 3
        |  c     := a + b

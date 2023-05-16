@@ -48,8 +48,8 @@ object InitEvaluator extends ElementEvaluator[Seq[DFAny.Token]] {
           val relValInit = applySel.relValRef.evaluate
           val idxInit = applySel.idxRef.evaluate
           DFAny.TokenSeq(relValInit, idxInit) {
-            case (r : DFBits.Token, i : DFUInt.Token) => r.bit(i)
-            case (r : DFVector.Token, i : DFUInt.Token) => r.sel(i)
+            case (r : Bits.Token, i : UInt.Token) => r.bit(i)
+            case (r : DFVector.Token, i : UInt.Token) => r.sel(i)
           }
       }
       case x =>

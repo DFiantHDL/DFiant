@@ -8,7 +8,7 @@ import DFiant.internals.BitsWidthOf.SignedCfg.IntAux
 import compiler.csprinter.CSPrinter
 import singleton.ops.OpContainer.Eq
 
-object DFUInt {
+object UInt {
   type Type[W] = DFDecimal.Type[false, W, 0]
   object Type {
     def apply[W](width : TwoFace.Int[W]) : Type[W] = DFDecimal.Type(false, width, 0)
@@ -51,7 +51,7 @@ object DFUInt {
   ) : Type[w.Out] = Type(w(supremum.getValue-1))
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
-object DFSInt {
+object SInt {
   type Type[W] = DFDecimal.Type[true, W, 0]
   object Type {
     def apply[W](width : TwoFace.Int[W]) : Type[W] = DFDecimal.Type(true, width, 0)
@@ -101,15 +101,15 @@ object DFDecimal extends DFAny.Companion {
     type TPatternAble[+R] = DFDecimal.Pattern.Able[R]
     type TPatternBuilder[LType <: DFAny.Type] = DFDecimal.Pattern.Builder[LType]
     def getBubbleToken: TToken = Token.bubble(signed, width, fractionWidth)
-    def getTokenFromBits(fromToken : DFBits.Token) : DFAny.Token =
+    def getTokenFromBits(fromToken : Bits.Token) : DFAny.Token =
       (signed.getValue, fractionWidth.getValue) match {
         case (false, 0) => fromToken.toUInt
         case (true, 0) => fromToken.toSInt
         case _ => ??? //TODO: ufix/sfix
       }
     override def toString: String = (signed.getValue, fractionWidth.getValue) match {
-      case (false, 0) => s"DFUInt[$width]"
-      case (true, 0) => s"DFSInt[$width]"
+      case (false, 0) => s"UInt[$width]"
+      case (true, 0) => s"SInt[$width]"
       case (false, _) => s"DFUFix[$magnitudeWidth, $fractionWidth]"
       case (true, _) => s"DFSFix[$magnitudeWidth, $fractionWidth]"
     }
@@ -124,8 +124,8 @@ object DFDecimal extends DFAny.Companion {
     def codeString(implicit printer: CSPrinter) : String = {
       import printer.config._
       (signed.getValue, fractionWidth.getValue) match {
-        case (false, 0) => s"$TP DFUInt($LIT$width)"
-        case (true, 0) => s"$TP DFSInt($LIT$width)"
+        case (false, 0) => s"$TP UInt($LIT$width)"
+        case (true, 0) => s"$TP SInt($LIT$width)"
         case (false, _) => s"$TP DFUFix($LIT$magnitudeWidth, $LIT$fractionWidth)"
         case (true, _) => s"$TP DFSFix($LIT$magnitudeWidth, $LIT$fractionWidth)"
       }
@@ -207,20 +207,20 @@ object DFDecimal extends DFAny.Companion {
       mkToken(right, _ % _, right.width, 0)
     }
 
-    def <  (right : Token) : DFBool.Token = mkTokenB(right, _ < _)
-    def >  (right : Token) : DFBool.Token = mkTokenB(right, _ > _)
-    def <= (right : Token) : DFBool.Token = mkTokenB(right, _ <= _)
-    def >= (right : Token) : DFBool.Token = mkTokenB(right, _ >= _)
-    def == (right : Token) : DFBool.Token = mkTokenB(right, _ == _)
-    def != (right : Token) : DFBool.Token = mkTokenB(right, _ != _)
+    def <  (right : Token) : Bool.Token = mkTokenB(right, _ < _)
+    def >  (right : Token) : Bool.Token = mkTokenB(right, _ > _)
+    def <= (right : Token) : Bool.Token = mkTokenB(right, _ <= _)
+    def >= (right : Token) : Bool.Token = mkTokenB(right, _ >= _)
+    def == (right : Token) : Bool.Token = mkTokenB(right, _ == _)
+    def != (right : Token) : Bool.Token = mkTokenB(right, _ != _)
     def << (right : Token) : Token = right match {
-      case DFUInt.Token(w, _) if w < 31 =>
+      case UInt.Token(w, _) if w < 31 =>
         if (signed) mkToken(right, _ << _.toInt, width, fractionWidth)
         else (left.bits << right).toUInt
       case _ => ???
     }
     def >> (right : Token) : Token = right match {
-      case DFUInt.Token(w, _) if w < 31 =>
+      case UInt.Token(w, _) if w < 31 =>
         if (signed) mkToken(right, _ >> _.toInt, width, fractionWidth)
         else (left.bits >> right).toUInt
       case _ => ???
@@ -422,7 +422,7 @@ object DFDecimal extends DFAny.Companion {
   ) extends DFAny.Pattern.OfIntervalSet[Type[Boolean, Int, Int], BigInt, Pattern](dfType, intervalSet) {
     protected def matchCond(matchVal: DFDecimal[Boolean, Int, Int], interval : Interval[BigInt])(
       implicit ctx: DFAny.Context
-    ): DFBool = {
+    ): Bool = {
       import continuum.bound._
       import DFDesign.Frontend._
       def tokenOf(bigInt : BigInt) : Token =
@@ -557,14 +557,14 @@ object DFDecimal extends DFAny.Companion {
             S,
             ITE[
               F == 0,
-              //DFSInt
+              //SInt
               RequireMsg[W > 1, "Signed integer width must be larger than 1. Width = " + ToString[W]],
               //DFSFix
               RequireMsg[W > F, "Signed fixed point width must be larger than the fraction width. Width = " + ToString[W] + ", Fraction Width = " + ToString[F]],
             ],
             ITE[
               F == 0,
-              //DFUInt
+              //UInt
               RequireMsg[W > 0, "Unsigned integer width must be positive. Width = " + ToString[W]],
               //DFUFix
               RequireMsg[W >= F, "Unsigned fixed point width must not be smaller than the fraction width. Width = " + ToString[W] + ", Fraction Width = " + ToString[F]],
@@ -600,7 +600,7 @@ object DFDecimal extends DFAny.Companion {
         }
       }
       protected implicit class __DFSignedDecimalOps[LW, LF](val left : DFDecimal[true, LW, LF]){
-        def signBit(implicit ctx : DFAny.Context) : DFBit = left.bit(left.width-1)
+        def signBit(implicit ctx : DFAny.Context) : Bit = left.bit(left.width-1)
         def unary_-(implicit ctx : DFAny.Context) : DFDecimal[true, LW, LF] =
           DFAny.Func1(left.dfType, left, DFAny.Func1.Op.unary_-)(-_)
 
@@ -677,24 +677,24 @@ object DFDecimal extends DFAny.Companion {
         right.resize(left.width, left.fractionWidth).asValOf[Type[LS, LW, LF]]
       }
 
-      protected implicit def __DFUInt_ac_DFBits[LW, RW](
+      protected implicit def __UInt_ac_Bits[LW, RW](
         implicit
         ctx : DFAny.Context,
         checkLWvRW : `LW == RW`.CheckedShell[LW, RW]
-      ) : DFAny.`Op:=,<>`.Builder[DFUInt.Type[LW], DFBits[RW]] = (left, right) => trydf {
+      ) : DFAny.`Op:=,<>`.Builder[UInt.Type[LW], Bits[RW]] = (left, right) => trydf {
         checkLWvRW.unsafeCheck(left.width, right.width)
         import DFDesign.Frontend._
-        right.uint.asValOf[DFUInt.Type[LW]]
+        right.uint.asValOf[UInt.Type[LW]]
       }
 
-      protected implicit def __DFUInt_ac_DFBitsToken[LW, RW](
+      protected implicit def __UInt_ac_BitsToken[LW, RW](
         implicit
         ctx : DFAny.Context,
         checkLWvRW : `LW == RW`.CheckedShell[LW, RW]
-      ) : DFAny.`Op:=,<>`.Builder[DFUInt.Type[LW], DFBits.TokenW[RW]] = (left, right) => trydf {
+      ) : DFAny.`Op:=,<>`.Builder[UInt.Type[LW], Bits.TokenW[RW]] = (left, right) => trydf {
         checkLWvRW.unsafeCheck(left.width, right.width)
         import DFDesign.Frontend._
-        DFAny.Const.forced(right.toUInt).asValOf[DFUInt.Type[LW]]
+        DFAny.Const.forced(right.toUInt).asValOf[UInt.Type[LW]]
       }
 
       protected implicit def __DFDecimal_eq_Capable[LS, LW, LF, RS, RW, RF](
@@ -723,15 +723,15 @@ object DFDecimal extends DFAny.Companion {
     object Frontend {
       trait Inherited extends Frontend {
         final override protected implicit def __DFDecimal_ac_DFDecimal[LS, LW, LF, RS, RW, RF](implicit ctx : DFAny.Context, signMatch : `LS == RS`.CheckedShell[LS, RS], fitsWidth : internals.`LW >= RW`.CheckedShell[LW, RW], fitsFractionWidth : `LF >= RF`.CheckedShell[LF, RF]) : Builder[Type[LS, LW, LF], DFDecimal[RS, RW, RF]] = super.__DFDecimal_ac_DFDecimal
-        final override protected implicit def __DFUInt_ac_DFBits[LW, RW](implicit ctx: DFAny.Context, checkLWvRW: internals.`LW == RW`.CheckedShell[LW, RW]): Builder[DFUInt.Type[LW], DFBits[RW]] = super.__DFUInt_ac_DFBits
-        final override protected implicit def __DFUInt_ac_DFBitsToken[LW, RW](implicit ctx: DFAny.Context, checkLWvRW: internals.`LW == RW`.CheckedShell[LW, RW]): Builder[DFUInt.Type[LW], DFBits.TokenW[RW]] = super.__DFUInt_ac_DFBitsToken
+        final override protected implicit def __UInt_ac_Bits[LW, RW](implicit ctx: DFAny.Context, checkLWvRW: internals.`LW == RW`.CheckedShell[LW, RW]): Builder[UInt.Type[LW], Bits[RW]] = super.__UInt_ac_Bits
+        final override protected implicit def __UInt_ac_BitsToken[LW, RW](implicit ctx: DFAny.Context, checkLWvRW: internals.`LW == RW`.CheckedShell[LW, RW]): Builder[UInt.Type[LW], Bits.TokenW[RW]] = super.__UInt_ac_BitsToken
         final override protected implicit def __DFDecimal_eq_Capable[LS, LW, LF, RS, RW, RF](implicit signMatch : `LS == RS`.CheckedShell[LS, RS], checkLWvRW : internals.`LW == RW`.CheckedShell[LW, RW], checkLFvRF : `LF == RF`.CheckedShell[LF, RF]) : `Op==,!=`.Capable[Type[LS, LW, LF], Type[RS, RW, RF]] = super.__DFDecimal_eq_Capable
         final override protected implicit def __DFDecimal_eq_ConstCapable[VS, VW, VF, CS, CW, CF](implicit checkVSvCS : `VarS signMatch ConstS`.CheckedShellSym[Warn, VS, CS], checkVWvCW : `VarW >= ConstW`.CheckedShellSym[Warn, VW, CW], checkVFvCF : `VarF >= ConstF`.CheckedShellSym[Warn, VF, CF]) : `Op==,!=`.ConstCapable[Type[VS, VW, VF], Type[CS, CW, CF]] = super.__DFDecimal_eq_ConstCapable
       }
       trait Imported extends Frontend {
         final override implicit def __DFDecimal_ac_DFDecimal[LS, LW, LF, RS, RW, RF](implicit ctx : DFAny.Context, signMatch : `LS == RS`.CheckedShell[LS, RS], fitsWidth : internals.`LW >= RW`.CheckedShell[LW, RW], fitsFractionWidth : `LF >= RF`.CheckedShell[LF, RF]) : Builder[Type[LS, LW, LF], DFDecimal[RS, RW, RF]] = super.__DFDecimal_ac_DFDecimal
-        final override implicit def __DFUInt_ac_DFBits[LW, RW](implicit ctx: DFAny.Context, checkLWvRW: internals.`LW == RW`.CheckedShell[LW, RW]): Builder[DFUInt.Type[LW], DFBits[RW]] = super.__DFUInt_ac_DFBits
-        final override implicit def __DFUInt_ac_DFBitsToken[LW, RW](implicit ctx: DFAny.Context, checkLWvRW: internals.`LW == RW`.CheckedShell[LW, RW]): Builder[DFUInt.Type[LW], DFBits.TokenW[RW]] = super.__DFUInt_ac_DFBitsToken
+        final override implicit def __UInt_ac_Bits[LW, RW](implicit ctx: DFAny.Context, checkLWvRW: internals.`LW == RW`.CheckedShell[LW, RW]): Builder[UInt.Type[LW], Bits[RW]] = super.__UInt_ac_Bits
+        final override implicit def __UInt_ac_BitsToken[LW, RW](implicit ctx: DFAny.Context, checkLWvRW: internals.`LW == RW`.CheckedShell[LW, RW]): Builder[UInt.Type[LW], Bits.TokenW[RW]] = super.__UInt_ac_BitsToken
         final override implicit def __DFDecimal_eq_Capable[LS, LW, LF, RS, RW, RF](implicit signMatch : `LS == RS`.CheckedShell[LS, RS], checkLWvRW : internals.`LW == RW`.CheckedShell[LW, RW], checkLFvRF : `LF == RF`.CheckedShell[LF, RF]) : `Op==,!=`.Capable[Type[LS, LW, LF], Type[RS, RW, RF]] = super.__DFDecimal_eq_Capable
         final override implicit def __DFDecimal_eq_ConstCapable[VS, VW, VF, CS, CW, CF](implicit checkVSvCS : `VarS signMatch ConstS`.CheckedShellSym[Warn, VS, CS], checkVWvCW : `VarW >= ConstW`.CheckedShellSym[Warn, VW, CW], checkVFvCF : `VarF >= ConstF`.CheckedShellSym[Warn, VF, CF]) : `Op==,!=`.ConstCapable[Type[VS, VW, VF], Type[CS, CW, CF]] = super.__DFDecimal_eq_ConstCapable
       }
@@ -743,16 +743,16 @@ object DFDecimal extends DFAny.Companion {
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Comparison operations
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  protected abstract class OpsCompare[Op <: Func2.Op](op : Op)(func : (Token, Token) => DFBool.Token) {
+  protected abstract class OpsCompare[Op <: Func2.Op](op : Op)(func : (Token, Token) => Bool.Token) {
     @scala.annotation.implicitNotFound("Dataflow variable ${L} does not support Comparison Ops with the type ${R}")
-    trait Builder[-L, -R] extends DFAny.Op.Builder[L, R]{type Out = DFBool}
+    trait Builder[-L, -R] extends DFAny.Op.Builder[L, R]{type Out = Bool}
 
     object Builder {
       def create[L, LS, LW, LF, R, RS, RW, RF](properLR : (L, R) => (DFDecimal[LS, LW, LF], DFDecimal[RS, RW, RF]))(
         implicit ctx : DFAny.Context
       ) : Builder[L, R] = (leftL, rightR) => trydf {
         val (left, right) = properLR(leftL, rightR)
-        DFAny.Func2(DFBool.Type(logical = true), left, op, right)(func)
+        DFAny.Func2(Bool.Type(logical = true), left, op, right)(func)
       }
 
       implicit def evDFDecimal_op_DFDecimal[LS, LW, LF, RS, RW, RF](
@@ -1098,7 +1098,7 @@ object DFDecimal extends DFAny.Companion {
         type Msg[LW, RW] = "The shift vector is too large.\nFound: LHS-width = "+ ToString[LW] + " and RHS-width = " + ToString[RW]
         type ParamFace = Int
       }
-      def create[LS, LW, LF, RW](left : DFDecimal[LS, LW, LF], right : DFUInt[RW])(
+      def create[LS, LW, LF, RW](left : DFDecimal[LS, LW, LF], right : UInt[RW])(
         implicit
         ctx : DFAny.Context,
 //        checkLWvRW : SmallShift.CheckedShell[LW, RW]
@@ -1113,19 +1113,19 @@ object DFDecimal extends DFAny.Companion {
         DFAny.Func2(out, left, op, right)(func)
       }
 
-      implicit def evDFDecimal_op_DFUInt[LS, LW, LF, RW](
+      implicit def evDFDecimal_op_UInt[LS, LW, LF, RW](
         implicit
         ctx : DFAny.Context,
         checkLWvRW : SmallShift.CheckedShell[LW, RW]
-      ) : Builder[DFDecimal[LS, LW, LF], DFUInt[RW]] = (left, right) => create(left, right)
+      ) : Builder[DFDecimal[LS, LW, LF], UInt[RW]] = (left, right) => create(left, right)
 
       implicit def evDFDecimal_op_Const[LS, LW, LF, R, RW](
         implicit
         ctx : DFAny.Context,
-        rConst : DFAny.Const.AsIs.Aux[DFUInt.Type[LW], R, _ <: DFUInt.Type[RW]],
+        rConst : DFAny.Const.AsIs.Aux[UInt.Type[LW], R, _ <: UInt.Type[RW]],
         checkLWvRW : SmallShift.CheckedShell[LW, RW]
       ) : Builder[DFDecimal[LS, LW, LF], R] = (left, rightR) =>
-        create(left, rConst(DFUInt.Type[LW](left.width), rightR).asValOf[DFUInt.Type[RW]])
+        create(left, rConst(UInt.Type[LW](left.width), rightR).asValOf[UInt.Type[RW]])
     }
   }
 

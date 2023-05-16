@@ -9,7 +9,7 @@ import DFDesign.Frontend._
   */
 package object sequential {
 
-  @df def doWhile[C](cond: => Exact[C])(block: => Unit)(implicit arg: DFBool.Arg[C]) : FSM = FSM {
+  @df def doWhile[C](cond: => Exact[C])(block: => Unit)(implicit arg: Bool.Arg[C]) : FSM = FSM {
     ifdf(arg(cond)) {
       block
     }.elsedf {
@@ -17,10 +17,10 @@ package object sequential {
     }
   }
 
-  @df def waitWhile[C](cond: => Exact[C])(implicit arg: DFBool.Arg[C]): FSM =
+  @df def waitWhile[C](cond: => Exact[C])(implicit arg: Bool.Arg[C]): FSM =
     doWhile(cond){}(arg, ctx, ta)
 
-  @df def doUntil[C](cond: => Exact[C])(block: => Unit)(implicit arg: DFBool.Arg[C]): FSM = FSM {
+  @df def doUntil[C](cond: => Exact[C])(block: => Unit)(implicit arg: Bool.Arg[C]): FSM = FSM {
     block
     ifdf(arg(cond)) {
       nextStep.goto()
@@ -28,17 +28,17 @@ package object sequential {
   }
 
   @df def doOnce(block: => Unit): FSM = FSM {
-    val once = DFBool <> VAR init true
+    val once = Bool <> VAR init true
     ifdf(once)(block)
     once := false
   }
 
-  @df def waitUntil[C](cond: => Exact[C])(implicit arg: DFBool.Arg[C]): FSM =
+  @df def waitUntil[C](cond: => Exact[C])(implicit arg: Bool.Arg[C]): FSM =
     doUntil(cond){}(arg, ctx, ta)
 
   @df def waitForever() : FSM = FSM {}
 
-  @df private def privDoFor(range : Range, guard : Option[DFBool] = None)(block : DFUInt[Int] => Unit) : FSM = {
+  @df private def privDoFor(range : Range, guard : Option[Bool] = None)(block : UInt[Int] => Unit) : FSM = {
     assert(range.head >= 0 && range.last >= 0, "\ndoFor currently does not support negative range values")
     assert(range.nonEmpty, "\ndoFor cannot accept a null range")
     range match {
@@ -48,7 +48,7 @@ package object sequential {
         assert(range.last == range.end-1, s"\nThe last doFor value ${range.last} does not match the exclusive supremum value ${range.end}")
     }
     FSM {
-      val forCnt = DFUInt.max(range.head max range.last) <> VAR init range.head
+      val forCnt = UInt.max(range.head max range.last) <> VAR init range.head
       block(forCnt)
       def cntBlock = {
         ifdf (forCnt === range.last) {
@@ -64,9 +64,9 @@ package object sequential {
       }
     }
   }
-  @df def doFor(range : Range)(block : DFUInt[Int] => Unit) : FSM =
+  @df def doFor(range : Range)(block : UInt[Int] => Unit) : FSM =
     privDoFor(range, None)(block)
-  @df def doFor[G](range : Range, guard : Exact[G])(block : DFUInt[Int] => Unit)(implicit arg: DFBool.Arg[G]) : FSM =
+  @df def doFor[G](range : Range, guard : Exact[G])(block : UInt[Int] => Unit)(implicit arg: Bool.Arg[G]) : FSM =
     privDoFor(range, Some(arg(guard)))(block)
 
 }

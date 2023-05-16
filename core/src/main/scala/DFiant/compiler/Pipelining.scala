@@ -26,9 +26,9 @@ final class Pipelining[D <: DFDesign](c : IRCompilation[D]) {
 //          relBitHigh = relBitLow - 1
 //          addPipes(relBits, ep)
 //        }
-//        val piped = pipedParts.map(p => p.asValOf[DFBits.Type[Int]]).reduce(_ ++ _).anonymize
+//        val piped = pipedParts.map(p => p.asValOf[Bits.Type[Int]]).reduce(_ ++ _).anonymize
 //        member.dfType match {
-//          case DFBits.Type(_) => piped
+//          case Bits.Type(_) => piped
 //          case _ => piped.as(member.dfType).anonymize
 //        }
 //      case _ => ???

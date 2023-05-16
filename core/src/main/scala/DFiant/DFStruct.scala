@@ -245,7 +245,7 @@ object DFStruct extends DFAny.Companion {
         case _ => fields.name
       }
     }
-    def getTokenFromBits(fromToken : DFBits.Token) : DFAny.Token = {
+    def getTokenFromBits(fromToken : Bits.Token) : DFAny.Token = {
       assert(fromToken.width == width.getValue)
       var relBitHigh = fromToken.width-1
       val value : Map[Field[_], DFAny.Token] = fields.all.map { f =>
@@ -296,13 +296,13 @@ object DFStruct extends DFAny.Companion {
     lazy val (valueBits, bubbleMask) : (BitVector, BitVector) = {
       val token = fields.all
         .map(f => value.get(f).map(_.bits)
-        .getOrElse(DFBits.Token.bubble(f.dfType.width)))
+        .getOrElse(Bits.Token.bubble(f.dfType.width)))
         .reduce(_ ++ _)
       (token.valueBits, token.bubbleMask)
     }
-    def == (right : DFAny.Token)(implicit bb : Bubble.Behaviour) : DFBool.Token = right match {
+    def == (right : DFAny.Token)(implicit bb : Bubble.Behaviour) : Bool.Token = right match {
       case right : Token =>
-        DFBool.Token(logical = true, left.value == right.value)
+        Bool.Token(logical = true, left.value == right.value)
       case _ => ???
     }
     def codeString(implicit printer : CSPrinter) : String = {
@@ -349,7 +349,7 @@ object DFStruct extends DFAny.Companion {
 //  class Pattern(set : Set[DFEnum.Entries.Entry]) extends DFAny.Pattern.OfSet[Type[DFEnum.Entries], DFEnum.Entries.Entry, Pattern](set) {
 //    protected def matchCond(matchVal: DFAny.Of[Type[DFEnum.Entries]], value : DFEnum.Entries.Entry)(
 //      implicit ctx: DFAny.Context
-//    ): DFBool = {
+//    ): Bool = {
 //      import DFDesign.Frontend._
 //      matchVal === value.asInstanceOf[DFEnum.Entries#Entry]
 //    }

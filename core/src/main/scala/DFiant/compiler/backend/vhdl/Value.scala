@@ -8,12 +8,12 @@ private object Value {
   def const(token : DFAny.Token)(implicit printer : Printer) : String = {
     import printer.config._
     token match {
-      case t @ DFBits.Token(valueBits, _) if !t.isBubble => revision match {
+      case t @ Bits.Token(valueBits, _) if !t.isBubble => revision match {
         case _ if t.width % 4 == 0 => s"""x"${valueBits.toHex}""""
         case Revision.V2008 if t.width > 3 => s"""${t.width}x"${valueBits.toHexProper}""""
         case _ => s""""${valueBits.toBin}""""
       }
-      case t @ DFBits.Token(_, _) => //bits token with bubbles
+      case t @ Bits.Token(_, _) => //bits token with bubbles
         //a hex representation may not be possible if the don't-cares are not in a complete nibble
         lazy val hexRepOption : Option[String] = t.toHexString('-', allowBinMode = false)
         lazy val binRep = t.toBinString('-')
@@ -25,13 +25,13 @@ private object Value {
           }
           case _ => vhdlBin
         }
-      case DFUInt.Token(width, Some(value)) => revision match {
+      case UInt.Token(width, Some(value)) => revision match {
         case Revision.V93 if value.bitsWidth(false) < 31 => s"$FN to_unsigned($value, $width)"
         case Revision.V93 if width % 4 == 0 => s"""$TP unsigned'(x"${value.toBitVector(width).toHex}")"""
         case Revision.V93 => s"""$TP unsigned'("${value.toBitVector(width).toBin}")"""
         case Revision.V2008 => s"""${width}d"$value""""
       }
-      case DFSInt.Token(width, Some(value)) => revision match {
+      case SInt.Token(width, Some(value)) => revision match {
         case Revision.V93 if value.bitsWidth(true) < 31 => s"$FN to_signed($value, $width)"
         case Revision.V93 if width % 4 == 0 => s"""$TP signed'(x"${value.toBitVector(width).toHex}")"""
         case Revision.V93 => s"""$TP signed'("${value.toBitVector(width).toBin}")"""
@@ -39,14 +39,14 @@ private object Value {
         case Revision.V2008 if value < 0 => s"""-${width}d"${-value}""""
         case _ => ???
       }
-      case DFBool.Token(false, Some(value)) => if (value) "'1'" else "'0'"
-      case DFBool.Token(true, Some(value)) => value.toString
+      case Bool.Token(false, Some(value)) => if (value) "'1'" else "'0'"
+      case Bool.Token(true, Some(value)) => value.toString
       case DFEnum.Token(_, Some(entry)) => EnumEntriesDcl.enumEntryFullName(entry)
-      case DFUInt.Token(_, None) => const(token.bits)
-      case DFSInt.Token(_, None) => const(token.bits)
+      case UInt.Token(_, None) => const(token.bits)
+      case SInt.Token(_, None) => const(token.bits)
       case DFEnum.Token(entries, None) => EnumEntriesDcl.enumEntryFullName(entries.all.head._2)
-      case DFBool.Token(false, None) => "'-'"
-      case DFBool.Token(true, None) => s"$LIT false"
+      case Bool.Token(false, None) => "'-'"
+      case Bool.Token(true, None) => s"$LIT false"
       case DFVector.Token(_, value) => value.map(const(_)).mkString("(", ", ", ")")
       case t =>
         println(t)
@@ -90,11 +90,11 @@ private object Value {
       case Op.& | Op.&& => "and"
       case Op.^ => "xor"
       case Op.<< => leftArg match {
-        case DFSInt(_) => "sla"
+        case SInt(_) => "sla"
         case _ => "sll"
       }
       case Op.>> => leftArg match {
-        case DFSInt(_) => "sra"
+        case SInt(_) => "sra"
         case _ => "srl"
       }
       case Op.++ => "&"
@@ -103,13 +103,13 @@ private object Value {
         ???
     }
     val leftArgStr = leftArg match {
-      case DFAny.Const(_,DFUInt.Token(_,Some(value)),_,_) => s"$LIT$value"
-      case DFAny.Const(_,DFSInt.Token(_,Some(value)),_,_) => s"$LIT$value"
+      case DFAny.Const(_,UInt.Token(_,Some(value)),_,_) => s"$LIT$value"
+      case DFAny.Const(_,SInt.Token(_,Some(value)),_,_) => s"$LIT$value"
       case _ => ref(leftArg)
     }
     val rightArgStr = (member.op, rightArg) match {
-      case (_, DFAny.Const(_,DFUInt.Token(_,Some(value)),_,_)) => s"$LIT$value"
-      case (_, DFAny.Const(_,DFSInt.Token(_,Some(value)),_,_)) => s"$LIT$value"
+      case (_, DFAny.Const(_,UInt.Token(_,Some(value)),_,_)) => s"$LIT$value"
+      case (_, DFAny.Const(_,SInt.Token(_,Some(value)),_,_)) => s"$LIT$value"
       case (Op.<< | Op.>>, ra) => s"$FN to_integer(${ref(ra)})"
       case (_, ra) => ref(ra)
     }
@@ -128,10 +128,10 @@ private object Value {
         case _ => s"$OP not ${comparison.applyBrackets()}"
       }
     } else (leftArg, member.op, revision) match {
-      case (DFBits(_), Op.<<, Revision.V93) => s"$FN to_slv($FN shift_left($TP unsigned($leftArgStr), $rightArgStr))"
-      case (DFBits(_), Op.>>, Revision.V93) => s"$FN to_slv($FN shift_right($TP unsigned($leftArgStr), $rightArgStr))"
-      case (DFUInt(_) | DFSInt(_), Op.<<, Revision.V93) => s"$FN shift_left($leftArgStr, $rightArgStr)"
-      case (DFUInt(_) | DFSInt(_), Op.>>, Revision.V93) => s"$FN shift_right($leftArgStr, $rightArgStr)"
+      case (Bits(_), Op.<<, Revision.V93) => s"$FN to_slv($FN shift_left($TP unsigned($leftArgStr), $rightArgStr))"
+      case (Bits(_), Op.>>, Revision.V93) => s"$FN to_slv($FN shift_right($TP unsigned($leftArgStr), $rightArgStr))"
+      case (UInt(_) | SInt(_), Op.<<, Revision.V93) => s"$FN shift_left($leftArgStr, $rightArgStr)"
+      case (UInt(_) | SInt(_), Op.>>, Revision.V93) => s"$FN shift_right($leftArgStr, $rightArgStr)"
       case (_, Op.*, _) => s"$FN resize(${leftArgStr.applyBrackets()} $OP$opStr ${rightArgStr.applyBrackets()}, ${leftArg.width max rightArg.width})"
       case _ => s"${leftArgStr.applyBrackets()} $OP$opStr ${rightArgStr.applyBrackets()}"
     }
@@ -150,31 +150,31 @@ private object Value {
                 val enumAsIntegerStr = s"${EnumEntriesDcl.entriesName(entries)}$OP'pos($relValStr)"
                 val enumAsUnsignedStr = s"$FN to_unsigned($enumAsIntegerStr, ${toVal.width})"
                 toVal match {
-                  case DFUInt(_) => enumAsUnsignedStr
-                  case DFSInt(_) => s"$FN to_signed($enumAsIntegerStr, ${toVal.width})"
-                  case DFBits(_) => s"$FN to_slv($enumAsUnsignedStr)"
+                  case UInt(_) => enumAsUnsignedStr
+                  case SInt(_) => s"$FN to_signed($enumAsIntegerStr, ${toVal.width})"
+                  case Bits(_) => s"$FN to_slv($enumAsUnsignedStr)"
                   case _ => ???
                 }
               case _ : DFEnum.Manual[_] => relValStr
             }
-          case (DFBits(_), _) => s"$FN to_slv($relValStr)"
-          case (DFUInt(_), _) => s"$TP unsigned($relValStr)"
-          case (DFSInt(_), _) => s"$TP signed($relValStr)"
+          case (Bits(_), _) => s"$FN to_slv($relValStr)"
+          case (UInt(_), _) => s"$TP unsigned($relValStr)"
+          case (SInt(_), _) => s"$TP signed($relValStr)"
           case (DFEnum(_), _) => ???
-          case (DFBool(), DFBit()) => s"$FN to_bool($relValStr)"
-          case (DFBit(), DFBits(w)) if (w == 1) => s"${relValStr.applyBrackets()}($LIT 0)"
-          case (DFBit(), DFBool()) => s"$FN to_sl($relValStr)"
+          case (Bool(), Bit()) => s"$FN to_bool($relValStr)"
+          case (Bit(), Bits(w)) if (w == 1) => s"${relValStr.applyBrackets()}($LIT 0)"
+          case (Bit(), Bool()) => s"$FN to_sl($relValStr)"
           case _ => ???
         }
       case DFAny.Alias.BitsWL(dfType, _, _, relWidth, relBitLow, _, _) =>
         val relBitHigh = relBitLow + relWidth - 1
         val bitsConv = relVal match {
-          case DFBits(_) => relValStr
+          case Bits(_) => relValStr
           case _ => s"$FN to_slv($relValStr)"
         }
         dfType match {
-          case DFBool.Type(false) => s"${bitsConv.applyBrackets()}($LIT$relBitLow)"
-          case DFBits.Type(_) =>
+          case Bool.Type(false) => s"${bitsConv.applyBrackets()}($LIT$relBitLow)"
+          case Bits.Type(_) =>
             if (relVal.width == relWidth) bitsConv
             else s"${bitsConv.applyBrackets()}($LIT$relBitHigh $KW downto $LIT$relBitLow)"
         }
@@ -205,7 +205,7 @@ private object Value {
     case DFAny.ApplySel(_, _, relValRef,idxRef, _, _) =>
       import printer.config._
       val idxStr = idxRef.get match {
-        case DFAny.Const(_,DFUInt.Token(_,Some(value)),_,_) => s"$LIT$value"
+        case DFAny.Const(_,UInt.Token(_,Some(value)),_,_) => s"$LIT$value"
         case idxVal => s"$FN to_integer(${ref(idxVal)})"
       }
       s"${Value.ref(relValRef).applyBrackets()}($idxStr)"

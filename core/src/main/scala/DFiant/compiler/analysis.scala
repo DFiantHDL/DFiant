@@ -201,11 +201,11 @@ object analysis {
             val union = patterns.asInstanceOf[List[DFDecimal.Pattern]].foldLeft(IntervalSet.empty[BigInt]){case (is, p) => is | p.patternSet}
             val fullRange = Interval.closed(BigInt.minSignedFromWidth(matchVal.width), BigInt.maxSignedFromWidth(matchVal.width))
             union.contains(fullRange)
-          case _ : DFBits.Type[_] =>
-            val union = patterns.asInstanceOf[List[DFBits.Pattern]].foldLeft(Set.empty[DFBits.Token]){case (s, p) => s | p.patternSet}
+          case _ : Bits.Type[_] =>
+            val union = patterns.asInstanceOf[List[Bits.Pattern]].foldLeft(Set.empty[Bits.Token]){case (s, p) => s | p.patternSet}
             union.size == BigInt.maxUnsignedFromWidth(matchVal.width).toInt + 1
-          case _ : DFBool.Type =>
-            val union = patterns.asInstanceOf[List[DFBool.Pattern]].foldLeft(Set.empty[Boolean]){case (s, p) => s | p.patternSet}
+          case _ : Bool.Type =>
+            val union = patterns.asInstanceOf[List[Bool.Pattern]].foldLeft(Set.empty[Boolean]){case (s, p) => s | p.patternSet}
             union.size == 2
           case e : DFEnum.Type[_] =>
             val union = patterns.asInstanceOf[List[DFEnum.Pattern]].foldLeft(Set.empty[DFEnum.Entries.Entry]){case (s, p) => s | p.patternSet}

@@ -4,8 +4,8 @@ import DFiant.TestUtils._
 
 class DFCrossInterfaceSpec extends DFTopSpec {
   @df class UARTIfc extends DFCrossInterface {
-    val tx = DFBit <> OUT
-    val rx = DFBit <> IN
+    val tx = Bit <> OUT
+    val rx = Bit <> IN
 
     override protected[DFiant] def crossConnection(twin: UARTIfc.this.type)(implicit ctx: DFBlock.Context): Unit = {
       rx <> twin.tx
@@ -27,8 +27,8 @@ class DFCrossInterfaceSpec extends DFTopSpec {
 
   val expectedCodeString : String =
     """|@df final class UART extends DFDesign {
-       |  val io_tx   = DFBit <> OUT
-       |  val io_rx   = DFBit <> IN
+       |  val io_tx   = Bit <> OUT
+       |  val io_rx   = Bit <> IN
        |}
        |
        |@df final class Top extends DFDesign {

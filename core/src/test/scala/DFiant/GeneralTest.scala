@@ -29,8 +29,8 @@
 //object GeneralTest {
 //  import GlobalDesign._
 //  val two = 2
-//  val d = DFUInt(2)
-//  val d9 = DFUInt(9)
+//  val d = UInt(2)
+//  val d9 = UInt(9)
 ////  d + (d + d).wc
 ////  d.extendable == d2
 ////  d.extendable == 100
@@ -38,30 +38,30 @@
 ////  d2 < d
 ////  d + one
 ////  d + (d + d).wc
-//  val aaa = DFUInt.Token(8, 3)
+//  val aaa = UInt.Token(8, 3)
 //
 //  val dd = d9 + 200
-//  implicitly[dd.type <:< DFUInt[9]]
+//  implicitly[dd.type <:< UInt[9]]
 ////  -10 + d
 ////  d := -1L
 ////  10L > d && d < 10
-//  1.toDFUInt.extendable + d
-//  1L.toDFUInt.extendable + d
-//  BigInt(1).toDFUInt.extendable + d
-//  val aa = DFUInt(8).init(5).prev(2)
+//  1.toUInt.extendable + d
+//  1L.toUInt.extendable + d
+//  BigInt(1).toUInt.extendable + d
+//  val aa = UInt(8).init(5).prev(2)
 //
 //  d9.bits(0 TO one)
 //  //  d < 10
 ////  -10 - d
 ////  (1 < d) && (d > 3)
 //
-//  val ff = DFUInt[8]
+//  val ff = UInt[8]
 //  ff.init(1, 7L, aaa, 100, ?, Seq(aaa, aaa))
 //
 ////  ff + d
-//  val u = DFUInt(one)
+//  val u = UInt(one)
 //
-//  DFUInt(one)
+//  UInt(one)
 //
 ////  ff == 1
 ////  d + ff

@@ -2,12 +2,12 @@ package DFiant
 
 import DFiant.TestUtils._
 
-class DFUIntBitsConvSpec extends DFTopSpec {
+class UIntBitsConvSpec extends DFTopSpec {
   @df class Top extends DFDesign {
-    val xu = DFUInt(8) <> IN
-    val yb = DFBits(8) <> OUT
-    val xb = DFBits(8) <> IN
-    val yu = DFUInt(8) <> OUT
+    val xu = UInt(8) <> IN
+    val yb = Bits(8) <> OUT
+    val xb = Bits(8) <> IN
+    val yu = UInt(8) <> OUT
     yb := xu
     yb := d"8'25"
     yu := xb
@@ -18,10 +18,10 @@ class DFUIntBitsConvSpec extends DFTopSpec {
 
   val expectedCodeString : String =
     """|@df final class Top extends DFDesign {
-       |  val xu = DFUInt(8) <> IN
-       |  val yb = DFBits(8) <> OUT
-       |  val xb = DFBits(8) <> IN
-       |  val yu = DFUInt(8) <> OUT
+       |  val xu = UInt(8) <> IN
+       |  val yb = Bits(8) <> OUT
+       |  val xb = Bits(8) <> IN
+       |  val yu = UInt(8) <> OUT
        |  yb     := xu.bits
        |  yb     := h"8'19"
        |  yu     := xb.uint

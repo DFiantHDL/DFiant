@@ -191,12 +191,12 @@ final class RTL[D <: DFDesign](c : IRCompilation[D]) {
           prevReplacements.foreach(pr => pr.sigAssign)
           private def rstBlock() : Unit = prevReplacements.foreach(pr => pr.rstAssign)
           private def clkBlock() : Unit = prevReplacements.foreach(pr => pr.clkAssign)
-          private val clkCond : DFBool = clockParams.edge match {
+          private val clkCond : Bool = clockParams.edge match {
             case Edge.Rising => clk.rising().anonymize
             case Edge.Falling => clk.falling().anonymize
           }
           if (hasPrevRst) {
-            val rstCond : DFBool = resetParams.active match {
+            val rstCond : Bool = resetParams.active match {
               case Active.Low => (rst === 0).anonymize
               case Active.High => (rst === 1).anonymize
             }
@@ -284,7 +284,7 @@ object RTL {
           _,
           rst @ IsReset(),
           DFAny.Func2.Op.==,
-          DFAny.Const(_, DFBool.Token(_, Some(edge)), _, _),
+          DFAny.Const(_, Bool.Token(_, Some(edge)), _, _),
           _,
           _
           ) =>
@@ -331,13 +331,13 @@ object RTL {
     private val rstInit : Int = rstParams.activeInt
     final lazy val clk = {
       _hasClk = true
-      if (simulation) DFBit <> VAR forcedInit(Seq(DFBool.Token(clkInit))) setName(clkParams.name) tag RTL.Tag.Clk
-      else DFBit <> IN tag RTL.Tag.Clk setName(clkParams.name)
+      if (simulation) Bit <> VAR forcedInit(Seq(Bool.Token(clkInit))) setName(clkParams.name) tag RTL.Tag.Clk
+      else Bit <> IN tag RTL.Tag.Clk setName(clkParams.name)
     }
     final lazy val rst = {
       _hasRst = true
-      if (simulation) DFBit <> VAR forcedInit(Seq(DFBool.Token(rstInit))) setName(rstParams.name) tag RTL.Tag.Rst
-      else DFBit <> IN tag RTL.Tag.Rst setName(rstParams.name)
+      if (simulation) Bit <> VAR forcedInit(Seq(Bool.Token(rstInit))) setName(rstParams.name) tag RTL.Tag.Rst
+      else Bit <> IN tag RTL.Tag.Rst setName(rstParams.name)
     }
     final def hasClk : Boolean = _hasClk
     final def hasRst : Boolean = _hasRst
@@ -352,7 +352,7 @@ object RTL {
         case r : DFMember.OwnedRef => r.refType match {
           case _ : DFConditional.MatchHeader.Ref.Type => r.owner.get match {
             case DFConditional.CaseBlock(_,_,Some(pattern),_,_) => pattern match {
-              case b : DFBits.Pattern => b.patternSet.exists(_.isBubble)
+              case b : Bits.Pattern => b.patternSet.exists(_.isBubble)
               case _ => false
             }
             case _ => false

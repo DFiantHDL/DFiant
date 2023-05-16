@@ -6,8 +6,8 @@ class SMA_DS2Spec extends DFTopSpec {
 
   val expectedCodeString : String =
     """|@df final class SMA_DS2 extends DFDesign {
-       |  val x   = DFSInt(16) <> IN  init 0
-       |  val y   = DFSInt(16) <> OUT
+       |  val x   = SInt(16) <> IN  init 0
+       |  val y   = SInt(16) <> OUT
        |  val s0  = x +^ x.prev
        |  val s2  = s0.prev(2)
        |  val sum = s0 +^ s2

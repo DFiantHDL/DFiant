@@ -18,14 +18,14 @@
 //import DFiant._
 //
 //class FoldRTx2(width : Int)(implicit ctx : RTComponent.Context) extends RTComponent {
-//  final val I = DFUInt(width) <> IN
-//  final val O = DFUInt(width) <> OUT
+//  final val I = UInt(width) <> IN
+//  final val O = UInt(width) <> OUT
 //  final override protected val blackBoxFunctions = Map(O -> BlackBoxFunction(O)(I, I)((l, r) => l + r))
 //}
 //
 //abstract class FoldComp(implicit ctx : DFComponent.Context[FoldComp]) extends DFComponent[FoldComp] {
-//  val i = DFUInt(8) <> IN
-//  val o = DFUInt(8) <> OUT
+//  val i = UInt(8) <> IN
+//  val o = UInt(8) <> OUT
 //  final override protected val blackBoxFunctions = Map(o -> BlackBoxFunction(o)(i, i)((l, r) => l + r))
 //}
 //object FoldComp {
@@ -42,8 +42,8 @@
 //}
 //
 //trait FoldTest extends DFDesign {
-//  val i = DFUInt(8) <> IN
-//  val o = DFUInt(8) <> OUT
+//  val i = UInt(8) <> IN
+//  val o = UInt(8) <> OUT
 //
 //  val io = new FoldComp {}
 ////  io.i <> 0

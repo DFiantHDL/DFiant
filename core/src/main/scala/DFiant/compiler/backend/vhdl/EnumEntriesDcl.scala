@@ -57,7 +57,7 @@ private object EnumEntriesDcl {
             |${typeList.mkString(",\n").delim()}
             |);""".stripMargin
       case _ =>
-        val uintType = Type(DFUInt.Type(entries.width))
+        val uintType = Type(UInt.Type(entries.width))
         val subtypeDcl = s"$KW subtype ${entriesName(entries)} $KW is $uintType;"
         s"""$subtypeDcl
            |${constants(entries)}

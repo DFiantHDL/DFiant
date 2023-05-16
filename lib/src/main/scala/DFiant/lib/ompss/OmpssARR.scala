@@ -35,11 +35,11 @@ import singleton.ops._
     * Sets the address for all partitions
     * @param addr the given address
     */
-  @df def setAddress(addr : DFBits[Int]) : Unit = partitions.foreach{p =>
+  @df def setAddress(addr : Bits[Int]) : Unit = partitions.foreach{p =>
     p.ce := 1
     p.address := addr
   }
-  @df def setAddress(addr : DFUInt[Int])(implicit di : DummyImplicit) : Unit = partitions.foreach{p =>
+  @df def setAddress(addr : UInt[Int])(implicit di : DummyImplicit) : Unit = partitions.foreach{p =>
     require(addr.width <= p.address.width)
     p.ce := 1
     p.address := addr.resize(p.address.width).bits
@@ -49,7 +49,7 @@ import singleton.ops._
     * @param partSel the selected partition
     * @return the read data
     */
-  @df def getDataRead(partSel : DFUInt[Int]) : DFBits[32] =
+  @df def getDataRead(partSel : UInt[Int]) : Bits[32] =
     partitions.map(_.q).selectdf(partSel)
 
   /**
@@ -57,7 +57,7 @@ import singleton.ops._
     * @param partSel the selected partition
     * @param data the written data
     */
-  @df def write(partSel : DFUInt[Int], data : DFBits[32]) : Unit =
+  @df def write(partSel : UInt[Int], data : Bits[32]) : Unit =
     partitions.foreachdf(partSel) {case p =>
       p.ce := 1
       p.we := 1
@@ -76,11 +76,11 @@ object OmpssARR {
   @df final class Partition[AW] private[ompss] (addrWidth : TwoFace.Int[AW], val factor : Int, val idx : Int)(
     dir : Either[PortDir, INOUT.type]
   ) extends DFInterface(new PartitionName(idx)) {
-    lazy val address  = DFBits(addrWidth) <> OUT
-    lazy val ce       = DFBit             <> OUT
-    lazy val we       = DFBit             <> OUT
-    lazy val d        = DFBits(32)        <> OUT
-    lazy val q        = DFBits(32)        <> IN
+    lazy val address  = Bits(addrWidth) <> OUT
+    lazy val ce       = Bit             <> OUT
+    lazy val we       = Bit             <> OUT
+    lazy val d        = Bits(32)        <> OUT
+    lazy val q        = Bits(32)        <> IN
 
     //touching only the relevant fields
     dir match {
