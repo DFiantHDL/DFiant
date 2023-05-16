@@ -21,3 +21,4 @@ sandbox/
 /.bloop/**
 /project/.bloop/**
 /.vscode/**
+/null/**
